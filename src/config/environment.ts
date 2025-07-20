@@ -17,21 +17,28 @@ if (norkcfg.database) {
 		}
 		if (!process.env.DB_USERNAME || !process.env.DB_PASSWORD || !process.env.DB_DATABASE) {
 			new Err(500, 'missing DB parameters in .env file')
-			process.exit(1)
+			throw new Error('missing DB parameters in .env file')
 		}
 	}
 }
 
 if (!fs.existsSync(path.join(__dirname, env_path))) {
-	console.log('$env_path = ', env_path)
-	console.log('$__dirname = ', __dirname)
-	new Err(500, `.env file for ${process.env.NODE_ENV ? process.env.NODE_ENV : ''} environment does not exists`)
-	process.exit()
+	// skip in test mode
+	if (process.env.NODE_ENV !== 'test') {
+		console.log('$env_path = ', env_path)
+		console.log('$__dirname = ', __dirname)
+		new Err(500, `.env file for ${process.env.NODE_ENV ? process.env.NODE_ENV : ''} environment does not exists`)
+		throw new Error(`Missing .env file`);
+	}
+}
+
+if (process.env.NODE_ENV === 'test') {
+	process.env.JWT_SECRET = process.env.JWT_SECRET || 'testsecret';
 }
 
 if (process.env.JWT_SECRET === undefined || process.env.JWT_SECRET == '') {
 	new Err(500, 'JWT_SECRET is not set!')
-	process.exit()
+	throw new Error('JWT_SECRET is not set!')
 }
 
 export default {

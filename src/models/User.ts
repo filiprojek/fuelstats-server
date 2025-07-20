@@ -4,7 +4,7 @@ import { Schema, model } from 'mongoose'
 export const schemaName = path.basename(__filename).split('.')[0]
 const schema = new Schema(
 	{
-		username: {
+		name: {
 			type: String,
 			required: true
 		},
@@ -17,12 +17,6 @@ const schema = new Schema(
 			type: String,
 			required: true
 		},
-		domains: [
-			{
-				role: Number,
-				domain_id: String
-			}
-		],
 		verification_code: {
 			type: Number,
 			length: 6
