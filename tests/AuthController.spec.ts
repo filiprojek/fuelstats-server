@@ -16,10 +16,10 @@ describe('AuthController', () => {
 
   describe('POST /api/v1/auth/signup', () => {
     it('returns 201 and user on success', async () => {
-      (AuthService.register as jest.Mock).mockResolvedValue({ id: '1', email: 'a@b.com', name: 'A' });
+      (AuthService.register as jest.Mock).mockResolvedValue({ id: '1', email: 'a@b.com', username: 'A' });
       const res = await request(app)
         .post('/api/v1/auth/signup')
-        .send({ email: 'a@b.com', password: 'pass', name: 'A' });
+        .send({ email: 'a@b.com', password: 'pass', username: 'A' });
       expect(res.status).toBe(201);
       expect(res.body).toHaveProperty('user');
     });

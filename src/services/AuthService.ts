@@ -7,9 +7,9 @@ import { Err, Succ } from '../services/globalService'
 class AuthService {
 	/**
 	 * Register a new user with email/password.
-	 * @returns The created user's id, email, and name.
+	 * @returns The created user's id, email, and username.
 	 */
-	static async register(data: { email: string; password: string; name?: string }): Promise<{ id: string; email: string; name?: string }> {
+	static async register(data: { email: string; password: string; username?: string }): Promise<{ id: string; email: string; username?: string }> {
 		const existing = await User.findOne({ email: data.email })
 		if (existing) {
 			const error: any = new Error('Email already in use')
@@ -22,12 +22,12 @@ class AuthService {
 		const user = new User({
 			email: data.email,
 			password: hashed,
-			name: data.name
+			username: data.username
 		})
 		await user.save()
 
 		new Succ(201, `User ${user.id} registered`)
-		return { id: user.id, email: user.email, name: user.name }
+		return { id: user.id, email: user.email, username: user.username }
 	}
 
 	/**

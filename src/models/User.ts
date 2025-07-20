@@ -4,7 +4,7 @@ import { Schema, model } from 'mongoose'
 export const schemaName = path.basename(__filename).split('.')[0]
 const schema = new Schema(
 	{
-		name: {
+		username: {
 			type: String,
 			required: true
 		},

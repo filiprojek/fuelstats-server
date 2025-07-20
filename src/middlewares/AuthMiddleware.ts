@@ -11,7 +11,7 @@ export function requireAuth(req: AuthRequest, res: Response, next: NextFunction)
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
     new Err(401, 'No token provided');
-    return res.status(401).json({ error: 'No token provided' });
+    return res.status(401).json({ message: 'Unauthorized' });
   }
   const token = authHeader.split(' ')[1];
   try {
@@ -21,6 +21,6 @@ export function requireAuth(req: AuthRequest, res: Response, next: NextFunction)
     next();
   } catch (err: any) {
     new Err(401, 'Invalid token');
-    return res.status(401).json({ error: 'Invalid token' });
+    return res.status(401).json({ message: 'Invalid token' });
   }
 }

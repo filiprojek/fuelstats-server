@@ -8,7 +8,7 @@ describe('AuthService', () => {
     id: '123',
     email: 'test@example.com',
     password: 'hashed',
-    name: 'Test',
+    username: 'Test',
   };
 
   afterEach(() => {
@@ -33,12 +33,12 @@ describe('AuthService', () => {
       const result = await AuthService.register({
         email: 'new@example.com',
         password: 'pass',
-        name: 'New',
+        username: 'New',
       });
 
       expect(bcrypt.hash).toHaveBeenCalledWith('pass', 10);
       expect(saveMock).toHaveBeenCalled();
-      expect(result).toMatchObject({ email: 'new@example.com', name: 'New' });
+      expect(result).toMatchObject({ email: 'new@example.com', username: 'New' });
     });
   });
 
