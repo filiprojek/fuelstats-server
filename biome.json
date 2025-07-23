@@ -1,6 +1,16 @@
 {
 	"$schema": "https://biomejs.dev/schemas/2.1.2/schema.json",
-	"vcs": { "enabled": true, "clientKind": "git", "useIgnoreFile": true },
+
+	"vcs": {
+		"enabled": true,
+		"clientKind": "git",
+		"useIgnoreFile": true
+	},
+
+	"files": {
+		"ignoreUnknown": false
+	},
+
 	"formatter": {
 		"enabled": true,
 		"formatWithErrors": false,
@@ -14,23 +24,38 @@
 		"expand": "auto",
 		"useEditorconfig": true
 	},
-	"linter": { "enabled": true, "rules": { "recommended": true } },
-	"javascript": {
-		"formatter": {
-			"jsxQuoteStyle": "single",
-			"quoteProperties": "asNeeded",
-			"trailingCommas": "none",
-			"semicolons": "asNeeded",
-			"arrowParentheses": "always",
-			"bracketSameLine": false,
-			"quoteStyle": "single",
-			"attributePosition": "auto",
-			"bracketSpacing": true
+
+	"linter": {
+		"enabled": true,
+		"rules": {
+			"recommended": true
 		}
 	},
-	"html": { "formatter": { "selfCloseVoidElements": "always" } },
+
+	"javascript": {
+		"formatter": {
+			"semicolons": "always",
+			"jsxQuoteStyle": "single",
+			"quoteProperties": "asNeeded",
+			"arrowParentheses": "always",
+			"trailingCommas": "all",
+			"quoteStyle": "double"
+		}
+	},
+
+	"html": {
+		"formatter": {
+			"selfCloseVoidElements": "always"
+		}
+	},
+
 	"assist": {
 		"enabled": true,
-		"actions": { "source": { "organizeImports": "on" } }
+		"actions": {
+			"source": {
+				"organizeImports": "on"
+			}
+		}
 	}
 }
+
