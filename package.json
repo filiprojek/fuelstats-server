@@ -16,7 +16,7 @@
     "copy-assets": "npx ts-node src/utils/copyAssets",
     "tsc": "tsc -p .",
     "build": "npm-run-all clean tsc copy-assets",
-    "format": "biome format",
+    "format": "biome format --write",
     "lint":   "biome check"
   },
   "dependencies": {
