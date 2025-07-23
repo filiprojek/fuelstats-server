@@ -1,34 +1,34 @@
-import path from 'path'
-import { Schema, model } from 'mongoose'
+import path from "path";
+import { Schema, model } from "mongoose";
 
-export const schemaName = path.basename(__filename).split('.')[0]
+export const schemaName = path.basename(__filename).split(".")[0];
 const schema = new Schema(
 	{
 		username: {
 			type: String,
-			required: true
+			required: true,
 		},
 		email: {
 			type: String,
 			required: true,
-			unique: true
+			unique: true,
 		},
 		password: {
 			type: String,
-			required: true
+			required: true,
 		},
 		verification_code: {
 			type: Number,
-			length: 6
+			length: 6,
 		},
 		verified: {
 			type: Boolean,
-			default: false
-		}
+			default: false,
+		},
 	},
 	{
-		timestamps: true
-	}
-)
+		timestamps: true,
+	},
+);
 
-export default model(path.basename(__filename).split('.')[0], schema)
+export default model(path.basename(__filename).split(".")[0], schema);

@@ -1,9 +1,9 @@
-import { body, param, query } from 'express-validator'
+import { body, param, query } from "express-validator";
 
 class rootValidator {
 	checkRootGet() {
-		return []
+		return [];
 	}
 }
 
-export default new rootValidator()
+export default new rootValidator();

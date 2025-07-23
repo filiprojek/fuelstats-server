@@ -1,11 +1,11 @@
-import http from 'http';
-import { app } from './app';
-import env from './config/environment';
-import { Succ } from './services/globalService';
-import connectDB from './config/database';
+import http from "http";
+import { app } from "./app";
+import env from "./config/environment";
+import { Succ } from "./services/globalService";
+import connectDB from "./config/database";
 
 const port: number = env.APP_PORT || 8080;
-const hostname: string = env.APP_HOSTNAME || 'localhost';
+const hostname: string = env.APP_HOSTNAME || "localhost";
 const server = http.createServer(app);
 
 function runServer(): void {
@@ -32,7 +32,7 @@ async function start(): Promise<void> {
 	}
 }
 
-start().catch(err => {
+start().catch((err) => {
 	console.error(err);
 	process.exit(1);
 });

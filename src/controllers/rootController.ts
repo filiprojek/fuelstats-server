@@ -1,6 +1,6 @@
-import { Request, Response } from 'express'
+import { Request, Response } from "express";
 
 export function root_get(req: Request, res: Response) {
-	res.render('home')
-	return true
+	res.render("home");
+	return true;
 }

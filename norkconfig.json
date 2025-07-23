@@ -1,12 +1,12 @@
 {
-  "project_name": "fuelstats-server",
-  "lang": "ts",
-  "author": "Filip Rojek",
-  "database": {
-    "db": "mongodb",
-    "orm": "mongoose"
-  },
-  "website": "https://filiprojek.cz",
-  "email": "filip@filiprojek.cz",
-  "version": "3.0.5"
+	"project_name": "fuelstats-server",
+	"lang": "ts",
+	"author": "Filip Rojek",
+	"database": {
+		"db": "mongodb",
+		"orm": "mongoose"
+	},
+	"website": "https://filiprojek.cz",
+	"email": "filip@filiprojek.cz",
+	"version": "3.0.5"
 }

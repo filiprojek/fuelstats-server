@@ -1,44 +1,44 @@
-import path from 'path'
-import fs from 'fs-extra'
-import { Err } from '../services/globalService'
-import dotenv from 'dotenv'
-const env_path = process.env.NODE_ENV ? `../.env.${process.env.NODE_ENV}` : '../.env'
+import path from "path";
+import fs from "fs-extra";
+import { Err } from "../services/globalService";
+import dotenv from "dotenv";
+const env_path = process.env.NODE_ENV ? `../.env.${process.env.NODE_ENV}` : "../.env";
 
-dotenv.config({ path: path.join(__dirname, env_path) })
-const norkcfg = fs.readJSONSync(path.join(__dirname, '../../norkconfig.json'))
+dotenv.config({ path: path.join(__dirname, env_path) });
+const norkcfg = fs.readJSONSync(path.join(__dirname, "../../norkconfig.json"));
 
 if (norkcfg.database) {
-	if (norkcfg.database.db == 'postgresql') {
+	if (norkcfg.database.db == "postgresql") {
 		if (!process.env.DB_PORT) {
-			process.env.DB_PORT = '5432'
+			process.env.DB_PORT = "5432";
 		}
 		if (!process.env.DB_HOST) {
-			process.env.DB_HOST = '127.0.0.1'
+			process.env.DB_HOST = "127.0.0.1";
 		}
 		if (!process.env.DB_USERNAME || !process.env.DB_PASSWORD || !process.env.DB_DATABASE) {
-			new Err(500, 'missing DB parameters in .env file')
-			throw new Error('missing DB parameters in .env file')
+			new Err(500, "missing DB parameters in .env file");
+			throw new Error("missing DB parameters in .env file");
 		}
 	}
 }
 
 if (!fs.existsSync(path.join(__dirname, env_path))) {
 	// skip in test mode
-	if (process.env.NODE_ENV !== 'test') {
-		console.log('$env_path = ', env_path)
-		console.log('$__dirname = ', __dirname)
-		new Err(500, `.env file for ${process.env.NODE_ENV ? process.env.NODE_ENV : ''} environment does not exists`)
+	if (process.env.NODE_ENV !== "test") {
+		console.log("$env_path = ", env_path);
+		console.log("$__dirname = ", __dirname);
+		new Err(500, `.env file for ${process.env.NODE_ENV ? process.env.NODE_ENV : ""} environment does not exists`);
 		throw new Error(`Missing .env file`);
 	}
 }
 
-if (process.env.NODE_ENV === 'test') {
-	process.env.JWT_SECRET = process.env.JWT_SECRET || 'testsecret';
+if (process.env.NODE_ENV === "test") {
+	process.env.JWT_SECRET = process.env.JWT_SECRET || "testsecret";
 }
 
-if (process.env.JWT_SECRET === undefined || process.env.JWT_SECRET == '') {
-	new Err(500, 'JWT_SECRET is not set!')
-	throw new Error('JWT_SECRET is not set!')
+if (process.env.JWT_SECRET === undefined || process.env.JWT_SECRET == "") {
+	new Err(500, "JWT_SECRET is not set!");
+	throw new Error("JWT_SECRET is not set!");
 }
 
 export default {
@@ -62,5 +62,5 @@ export default {
 	SMTP_HOST: String(process.env.SMTP_HOST),
 	SMTP_USER: String(process.env.SMTP_USER),
 	SMTP_PASS: String(process.env.SMTP_PASS),
-	SMTP_FROM: String(process.env.SMTP_FROM)
-}
+	SMTP_FROM: String(process.env.SMTP_FROM),
+};
