@@ -16,7 +16,8 @@
     "copy-assets": "npx ts-node src/utils/copyAssets",
     "tsc": "tsc -p .",
     "build": "npm-run-all clean tsc copy-assets",
-    "format": "npx prettier --write ."
+    "format": "biome format",
+    "lint":   "biome check"
   },
   "dependencies": {
     "bcryptjs": "^3.0.2",
@@ -32,6 +33,7 @@
     "mongoose": "^8.16.4"
   },
   "devDependencies": {
+    "@biomejs/biome": "2.1.2",
     "@types/bcryptjs": "^2.4.6",
     "@types/cookie-parser": "^1.4.9",
     "@types/cors": "^2.8.19",
