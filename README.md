@@ -22,7 +22,7 @@ A Node.js + TypeScript backend for Fuel Stats, exposing a RESTful API used by th
    ```bash
    git clone https://github.com/filiprojek/fuelstats-server.git
    cd fuelstats-server
-  ```
+   ```
 
 2. **Install dependencies**
 
@@ -53,4 +53,3 @@ A Node.js + TypeScript backend for Fuel Stats, exposing a RESTful API used by th
    ```bash
    npm test
    ```
-
