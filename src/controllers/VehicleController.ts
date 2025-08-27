@@ -26,34 +26,29 @@ class VehicleController {
 		}
 	}
 
-	static async list(req: Request, res: Response): Promise<Response> {
-		try {
-			const userId = (req as any).user.sub as string;
-			const vehicles = await VehicleService.list(userId);
-			new Succ(200, "Fetched vehicles", vehicles);
-			return res.status(200).json(vehicles);
-		} catch (err: any) {
-			new Err(500, "Vehicle fetch failed", err);
-			return res.status(500).json({ message: "Vehicle fetch failed" });
-		}
-	}
-
-	static async show(req: Request, res: Response): Promise<Response> {
+	static async update(req: Request, res: Response): Promise<Response> {
 		try {
 			const userId = (req as any).user.sub as string;
 			const id = req.params.id;
 
-			const vehicle = await VehicleService.getById(id, userId);
-			if (!vehicle) {
-				new Err(404, "Vehicle not found", { id, userId });
-				return res.status(404).json({ message: "Vehicle not found" });
-			}
+			const payload = {
+				name: req.body.name,
+				registrationPlate: req.body.registrationPlate,
+				fuelType: req.body.fuelType,
+				note: req.body.note,
+				isDefault: req.body.isDefault,
+			};
 
-			new Succ(200, "Vehicle fetched", vehicle);
+			const vehicle = await VehicleService.update(id, userId, payload);
+			new Succ(200, "Vehicle updated", vehicle);
 			return res.status(200).json(vehicle);
 		} catch (err: any) {
-			new Err(500, "Vehicle fetch failed", err);
-			return res.status(500).json({ message: "Vehicle fetch failed" });
+			if (err.message === "Vehicle not found") {
+				new Err(404, "Vehicle not found", err);
+				return res.status(404).json({ message: "Vehicle not found" });
+			}
+			new Err(500, "Vehicle update failed", err);
+			return res.status(500).json({ message: "Vehicle update failed" });
 		}
 	}
 }

@@ -121,5 +121,41 @@ describe("VehicleService", () => {
 			await expect(VehicleService.list(dto.userId)).rejects.toThrow("DB failure");
 		});
 	});
+
+	describe("update()", () => {
+		const id = "veh123";
+		const userId = dto.userId;
+		const updatePayload = { name: "Updated Car", note: "Updated note" };
+
+		it("should update an existing vehicle and return its details", async () => {
+			const now = new Date();
+			const updatedRecord = {
+				id,
+				userId,
+				name: updatePayload.name,
+				registrationPlate: dto.registrationPlate,
+				fuelType: dto.fuelType,
+				note: updatePayload.note,
+				isDefault: dto.isDefault!,
+				createdAt: now,
+			};
+			const spy = jest
+				.spyOn(Vehicle, "findOneAndUpdate")
+				.mockResolvedValue(updatedRecord as any);
+
+			const result = await VehicleService.update(id, userId, updatePayload);
+
+			expect(spy).toHaveBeenCalledWith({ _id: id, userId }, updatePayload, { new: true });
+			expect(result).toEqual(updatedRecord);
+		});
+
+		it("should throw if the vehicle is not found", async () => {
+			jest.spyOn(Vehicle, "findOneAndUpdate").mockResolvedValue(null as any);
+
+			await expect(VehicleService.update(id, userId, updatePayload)).rejects.toThrow(
+				"Vehicle not found",
+			);
+		});
+	});
 });
 

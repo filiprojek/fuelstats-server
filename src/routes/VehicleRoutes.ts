@@ -13,4 +13,7 @@ router.post("/", requireAuth, VehicleController.create);
 // GET /api/v1/vehicles/:id
 router.get("/:id", requireAuth, VehicleController.show);
 
+// PUT /api/v1/vehicles/:id
+router.put("/:id", requireAuth, VehicleController.update);
+
 export default router;
