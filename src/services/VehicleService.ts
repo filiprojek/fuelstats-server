@@ -64,6 +64,46 @@ class VehicleService {
 		}
 	}
 
+	/** DTO for updating a vehicle */
+	static async update(
+		id: string,
+		userId: string,
+		payload: Partial<Pick<IVehicle, "name" | "registrationPlate" | "fuelType" | "note" | "isDefault">>,
+	): Promise<VehiclePayload> {
+		try {
+			const updated = await Vehicle.findOneAndUpdate(
+				{ _id: id, userId },
+				payload,
+				{ new: true },
+			);
+
+			if (!updated) {
+				new Err(404, "Vehicle not found");
+				throw new Error("Vehicle not found");
+			}
+
+			const result: VehiclePayload = {
+				id: updated.id,
+				userId: updated.userId,
+				name: updated.name,
+				registrationPlate: updated.registrationPlate,
+				fuelType: updated.fuelType,
+				note: updated.note,
+				isDefault: updated.isDefault,
+				createdAt: updated.createdAt,
+			};
+
+			new Succ(200, "Vehicle updated", result);
+			return result;
+		} catch (err: any) {
+			if (err.message === "Vehicle not found") {
+				throw err;
+			}
+			new Err(500, "Vehicle update failed", err);
+			throw err;
+		}
+	}
+
 	/**
 	 * List all vehicles for the given user.
 	 */
@@ -119,4 +159,5 @@ class VehicleService {
 		}
 	}
 }
+
 export default VehicleService;

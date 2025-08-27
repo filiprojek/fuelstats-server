@@ -40,7 +40,7 @@ describe("VehicleController – POST /api/v1/vehicles", () => {
 		expect(res.body).toMatchObject({ message: expect.stringContaining("Unauthorized") });
 	});
 
-	it("calls VehicleService.create and returns 201 + payload", async () => {
+        it("calls VehicleService.create and returns 201 + payload", async () => {
 		const spy = jest.spyOn(VehicleService, "create").mockResolvedValue(returned as any);
 
 		const res = await request(app).post("/api/v1/vehicles").set("Authorization", `Bearer ${token}`).send({
@@ -62,8 +62,64 @@ describe("VehicleController – POST /api/v1/vehicles", () => {
 		});
 
 		expect(res.status).toBe(201);
-		expect(res.body).toEqual(returned);
-	});
+                expect(res.body).toEqual(returned);
+        });
+});
+
+describe("VehicleController – PUT /api/v1/vehicles/:id", () => {
+        const userId = "user123";
+        const vehicleId = "veh789";
+        const token = jwt.sign({ sub: userId, email: "x@example.com" }, env.JWT_SECRET, {
+                expiresIn: "1h",
+        });
+
+        const updatePayload = { name: "Updated Car", note: "Updated" };
+
+        const returned = {
+                id: vehicleId,
+                userId,
+                name: updatePayload.name,
+                registrationPlate: "ABC-123",
+                fuelType: "petrol",
+                note: updatePayload.note,
+                isDefault: false,
+                createdAt: new Date().toISOString(),
+        };
+
+        afterEach(() => {
+                jest.resetAllMocks();
+        });
+
+        it("returns 401 if not authenticated", async () => {
+                const res = await request(app).put(`/api/v1/vehicles/${vehicleId}`).send(updatePayload);
+                expect(res.status).toBe(401);
+                expect(res.body).toMatchObject({ message: expect.stringContaining("Unauthorized") });
+        });
+
+        it("calls VehicleService.update and returns 200 + payload", async () => {
+                const spy = jest.spyOn(VehicleService, "update").mockResolvedValue(returned as any);
+
+                const res = await request(app)
+                        .put(`/api/v1/vehicles/${vehicleId}`)
+                        .set("Authorization", `Bearer ${token}`)
+                        .send(updatePayload);
+
+                expect(spy).toHaveBeenCalledWith(vehicleId, userId, updatePayload);
+                expect(res.status).toBe(200);
+                expect(res.body).toEqual(returned);
+        });
+
+        it("returns 404 when VehicleService.update throws 'Vehicle not found'", async () => {
+                jest.spyOn(VehicleService, "update").mockRejectedValue(new Error("Vehicle not found"));
+
+                const res = await request(app)
+                        .put(`/api/v1/vehicles/${vehicleId}`)
+                        .set("Authorization", `Bearer ${token}`)
+                        .send(updatePayload);
+
+                expect(res.status).toBe(404);
+                expect(res.body).toMatchObject({ message: "Vehicle not found" });
+        });
 });
 
 describe("VehicleController – GET /api/v1/vehicles", () => {
