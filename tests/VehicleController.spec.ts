@@ -65,3 +65,41 @@ describe("VehicleController – POST /api/v1/vehicles", () => {
 		expect(res.body).toEqual(returned);
 	});
 });
+
+describe("VehicleController – GET /api/v1/vehicles", () => {
+	const userId = "user123";
+	const token = jwt.sign({ sub: userId, email: "x@example.com" }, env.JWT_SECRET, {
+		expiresIn: "1h",
+	});
+
+	const returned = [
+		{
+			id: "veh1",
+			userId,
+			name: "Car 1",
+			registrationPlate: "AAA-111",
+			fuelType: "petrol",
+			note: "n1",
+			isDefault: true,
+			createdAt: new Date().toISOString(),
+		},
+	];
+
+	afterEach(() => {
+		jest.resetAllMocks();
+	});
+
+	it("returns 401 if not authenticated", async () => {
+		const res = await request(app).get("/api/v1/vehicles");
+		expect(res.status).toBe(401);
+		expect(res.body).toMatchObject({ message: expect.stringContaining("Unauthorized") });
+	});
+
+	it("calls VehicleService.list and returns 200 + payload", async () => {
+		const spy = jest.spyOn(VehicleService, "list").mockResolvedValue(returned as any);
+		const res = await request(app).get("/api/v1/vehicles").set("Authorization", `Bearer ${token}`);
+		expect(spy).toHaveBeenCalledWith(userId);
+		expect(res.status).toBe(200);
+		expect(res.body).toEqual(returned);
+	});
+});
