@@ -158,6 +158,32 @@ class VehicleService {
 			throw err;
 		}
 	}
+
+	/**
+	 * Remove a vehicle owned by the specified user.
+	 *
+	 * @throws Error("Vehicle not found") if no matching vehicle exists
+	 */
+	static async remove(id: string, userId: string): Promise<void> {
+		try {
+			const deleted = await Vehicle.findOneAndDelete({ _id: id, userId });
+
+			if (!deleted) {
+				// Vehicle does not exist or is owned by another user
+				new Err(404, `Vehicle not found or not owned by user`, { id, userId });
+				throw new Error("Vehicle not found");
+			}
+
+			new Succ(200, "Vehicle removed", { id });
+		} catch (err: any) {
+			if (err.message === "Vehicle not found") {
+				// Already logged above
+				throw err;
+			}
+			new Err(500, "Vehicle deletion failed", err);
+			throw err;
+		}
+	}
 }
 
 export default VehicleService;

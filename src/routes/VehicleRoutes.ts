@@ -16,4 +16,7 @@ router.get("/:id", requireAuth, VehicleController.show);
 // PUT /api/v1/vehicles/:id
 router.put("/:id", requireAuth, VehicleController.update);
 
+// DELETE /api/v1/vehicles/:id
+router.delete("/:id", requireAuth, VehicleController.remove);
+
 export default router;
