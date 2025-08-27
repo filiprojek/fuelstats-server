@@ -53,6 +53,46 @@ describe("VehicleService", () => {
 		});
 	});
 
+
+	describe("getById()", () => {
+		const id = "veh1";
+
+		it("returns vehicle payload when found", async () => {
+			const now = new Date();
+			const found = {
+				id,
+				userId: dto.userId,
+				name: dto.name,
+				registrationPlate: dto.registrationPlate,
+				fuelType: dto.fuelType,
+				note: dto.note,
+				isDefault: dto.isDefault!,
+				createdAt: now,
+			};
+			const spy = jest.spyOn(Vehicle, "findOne").mockResolvedValue(found as any);
+
+			const result = await VehicleService.getById(id, dto.userId);
+
+			expect(spy).toHaveBeenCalledWith({ _id: id, userId: dto.userId });
+			expect(result).toEqual(found);
+		});
+
+		it("returns null when not found", async () => {
+			jest.spyOn(Vehicle, "findOne").mockResolvedValue(null);
+
+			const result = await VehicleService.getById(id, dto.userId);
+
+			expect(result).toBeNull();
+		});
+
+		it("throws if the lookup fails", async () => {
+			const error = new Error("DB failure");
+			jest.spyOn(Vehicle, "findOne").mockRejectedValue(error);
+
+			await expect(VehicleService.getById(id, dto.userId)).rejects.toThrow("DB failure");
+		});
+	});
+
 	describe("list()", () => {
 		it("returns vehicles for the user", async () => {
 			const docs = [
@@ -82,3 +122,4 @@ describe("VehicleService", () => {
 		});
 	});
 });
+
