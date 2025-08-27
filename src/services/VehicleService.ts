@@ -63,6 +63,30 @@ class VehicleService {
 			throw err;
 		}
 	}
+
+	/**
+	 * List all vehicles for the given user.
+	 */
+	static async list(userId: string): Promise<VehiclePayload[]> {
+		try {
+			const vehicles = await Vehicle.find({ userId });
+			const payload = vehicles.map((v) => ({
+				id: v.id,
+				userId: v.userId,
+				name: v.name,
+				registrationPlate: v.registrationPlate,
+				fuelType: v.fuelType,
+				note: v.note,
+				isDefault: v.isDefault,
+				createdAt: v.createdAt,
+			}));
+			new Succ(200, "Fetched vehicles", payload);
+			return payload;
+		} catch (err: any) {
+			new Err(500, "Vehicle fetch failed", err);
+			throw err;
+		}
+	}
 }
 
 export default VehicleService;

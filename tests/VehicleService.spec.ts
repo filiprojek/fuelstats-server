@@ -52,4 +52,33 @@ describe("VehicleService", () => {
 			await expect(VehicleService.create(dto)).rejects.toThrow("DB failure");
 		});
 	});
+
+	describe("list()", () => {
+		it("returns vehicles for the user", async () => {
+			const docs = [
+				{
+					id: "veh1",
+					userId: dto.userId,
+					name: "Car 1",
+					registrationPlate: "ABC-123",
+					fuelType: "petrol",
+					note: "note",
+					isDefault: false,
+					createdAt: new Date(),
+				},
+			];
+			const findSpy = jest.spyOn(Vehicle, "find").mockResolvedValue(docs as any);
+
+			const res = await VehicleService.list(dto.userId);
+			expect(findSpy).toHaveBeenCalledWith({ userId: dto.userId });
+			expect(res).toEqual(docs);
+		});
+
+		it("throws if the find operation fails", async () => {
+			const dbError = new Error("DB failure");
+			jest.spyOn(Vehicle, "find").mockRejectedValue(dbError);
+
+			await expect(VehicleService.list(dto.userId)).rejects.toThrow("DB failure");
+		});
+	});
 });
