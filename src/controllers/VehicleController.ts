@@ -82,6 +82,24 @@ class VehicleController {
 			return res.status(500).json({ message: "Vehicle update failed" });
 		}
 	}
+
+	static async remove(req: Request, res: Response): Promise<Response> {
+		try {
+			const userId = (req as any).user.sub as string;
+			const id = req.params.id;
+
+			await VehicleService.remove(id, userId);
+			new Succ(204, "Vehicle deleted", { id });
+			return res.status(204).send();
+		} catch (err: any) {
+			if (err.message === "Vehicle not found") {
+				new Err(404, "Vehicle not found", err);
+				return res.status(404).json({ message: "Vehicle not found" });
+			}
+			new Err(500, "Vehicle deletion failed", err);
+			return res.status(500).json({ message: "Vehicle deletion failed" });
+		}
+	}
 }
 
 export default VehicleController;

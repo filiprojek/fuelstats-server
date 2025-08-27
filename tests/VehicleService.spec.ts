@@ -53,7 +53,6 @@ describe("VehicleService", () => {
 		});
 	});
 
-
 	describe("getById()", () => {
 		const id = "veh1";
 
@@ -155,6 +154,33 @@ describe("VehicleService", () => {
 			await expect(VehicleService.update(id, userId, updatePayload)).rejects.toThrow(
 				"Vehicle not found",
 			);
+
+		});
+	});
+
+	describe("remove()", () => {
+		const id = "veh123";
+		const userId = "user1";
+
+		it("should delete the vehicle belonging to the user", async () => {
+			const spy = jest.spyOn(Vehicle, "findOneAndDelete").mockResolvedValue({ id } as any);
+
+			await VehicleService.remove(id, userId);
+
+			expect(spy).toHaveBeenCalledWith({ _id: id, userId });
+		});
+
+		it("should throw if vehicle not found", async () => {
+			jest.spyOn(Vehicle, "findOneAndDelete").mockResolvedValue(null);
+
+			await expect(VehicleService.remove(id, userId)).rejects.toThrow("Vehicle not found");
+		});
+
+		it("should throw if the delete operation fails", async () => {
+			const dbError = new Error("DB failure");
+			jest.spyOn(Vehicle, "findOneAndDelete").mockRejectedValue(dbError);
+
+			await expect(VehicleService.remove(id, userId)).rejects.toThrow("DB failure");
 		});
 	});
 });

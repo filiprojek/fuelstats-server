@@ -205,3 +205,49 @@ describe("VehicleController – GET /api/v1/vehicles/:id", () => {
 		expect(res.body).toEqual(returned);
 	});
 });
+
+describe("VehicleController – DELETE /api/v1/vehicles/:id", () => {
+	const userId = "user123";
+	const vehicleId = "veh123";
+	const token = jwt.sign({ sub: userId, email: "x@example.com" }, env.JWT_SECRET, {
+		expiresIn: "1h",
+	});
+
+	afterEach(() => {
+		jest.resetAllMocks();
+	});
+
+	it("returns 401 if not authenticated", async () => {
+		const res = await request(app).delete(`/api/v1/vehicles/${vehicleId}`);
+		expect(res.status).toBe(401);
+		expect(res.body).toMatchObject({ message: expect.stringContaining("Unauthorized") });
+	});
+
+	it("calls VehicleService.remove and returns 204 on success", async () => {
+		const spy = jest.spyOn(VehicleService, "remove").mockResolvedValue();
+
+		const res = await request(app).delete(`/api/v1/vehicles/${vehicleId}`).set("Authorization", `Bearer ${token}`);
+
+		expect(spy).toHaveBeenCalledWith(vehicleId, userId);
+		expect(res.status).toBe(204);
+		expect(res.body).toEqual({});
+	});
+
+	it("returns 404 if vehicle not found", async () => {
+		jest.spyOn(VehicleService, "remove").mockRejectedValue(new Error("Vehicle not found"));
+
+		const res = await request(app).delete(`/api/v1/vehicles/${vehicleId}`).set("Authorization", `Bearer ${token}`);
+
+		expect(res.status).toBe(404);
+		expect(res.body).toEqual({ message: "Vehicle not found" });
+	});
+
+	it("returns 500 if service throws", async () => {
+		jest.spyOn(VehicleService, "remove").mockRejectedValue(new Error("boom"));
+
+		const res = await request(app).delete(`/api/v1/vehicles/${vehicleId}`).set("Authorization", `Bearer ${token}`);
+
+		expect(res.status).toBe(500);
+		expect(res.body).toEqual({ message: "Vehicle deletion failed" });
+	});
+});
