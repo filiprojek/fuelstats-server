@@ -87,6 +87,36 @@ class VehicleService {
 			throw err;
 		}
 	}
-}
 
+	/**
+	 * Find a vehicle by its id for the given user.
+	 * Returns `null` if no such vehicle exists.
+	 */
+	static async getById(id: string, userId: string): Promise<VehiclePayload | null> {
+		try {
+			const vehicle = await Vehicle.findOne({ _id: id, userId });
+			if (!vehicle) {
+				new Err(404, "Vehicle not found", { id, userId });
+				return null;
+			}
+
+			const payload: VehiclePayload = {
+				id: vehicle.id,
+				userId: vehicle.userId,
+				name: vehicle.name,
+				registrationPlate: vehicle.registrationPlate,
+				fuelType: vehicle.fuelType,
+				note: vehicle.note,
+				isDefault: vehicle.isDefault,
+				createdAt: vehicle.createdAt,
+			};
+
+			new Succ(200, "Vehicle fetched", payload);
+			return payload;
+		} catch (err: any) {
+			new Err(500, "Vehicle fetch failed", err);
+			throw err;
+		}
+	}
+}
 export default VehicleService;
