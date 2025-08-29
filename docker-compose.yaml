@@ -22,6 +22,24 @@ services:
       ME_CONFIG_MONGODB_URL: mongodb://root:root@mongodb:27017/
       ME_CONFIG_BASICAUTH: false
 
+  fuelstats-server:
+    build:
+      context: .
+      dockerfile: Dockerfile   # or Dockerfile.bun
+    container_name: fuelstats-server
+    restart: unless-stopped
+    depends_on:
+      - mongodb
+    ports:
+      - "6060:6060"
+    environment:
+      NODE_ENV: production
+    env_file:
+      - .env.fuelstats
+    volumes:
+      - .env.production:/app/dist/.env.production:ro
+      - ./fuelstats-logs:/app/dist/logs
+
 volumes:
   fuelstats-mongo-data:
 
