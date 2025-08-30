@@ -45,7 +45,7 @@ bun install
 
 ### 3. Configure environment
 
-* Copy `.env.example` → `.env.production` and fill in your settings:
+* Copy `src/.env.example` → `.env.production` and fill in your settings:
 
   ```dotenv
   PORT=6060
