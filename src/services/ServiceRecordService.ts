@@ -11,9 +11,9 @@ export interface CreateServiceRecordDTO {
 	mileage: number;
 	shop?: string;
 	selfService?: boolean;
-	note?: string;
-	photos?: string[];
-	date: Date;
+        note?: string;
+        photos?: Buffer[];
+        date: Date;
 }
 
 export interface ServiceRecordPayload {
@@ -27,10 +27,10 @@ export interface ServiceRecordPayload {
 	mileage: number;
 	shop?: string;
 	selfService?: boolean;
-	note?: string;
-	photos?: string[];
-	date: Date;
-	createdAt: Date;
+        note?: string;
+        photos?: string[];
+        date: Date;
+        createdAt: Date;
 }
 
 class ServiceRecordService {
@@ -46,10 +46,10 @@ class ServiceRecordService {
 				mileage: data.mileage,
 				shop: data.shop,
 				selfService: data.selfService,
-				note: data.note,
-				photos: data.photos,
-				date: data.date,
-			} as Partial<IServiceRecord>);
+                                note: data.note,
+                                photos: data.photos,
+                                date: data.date,
+                        } as Partial<IServiceRecord>);
 
 			await record.save();
 
@@ -64,11 +64,11 @@ class ServiceRecordService {
 				mileage: record.mileage,
 				shop: record.shop,
 				selfService: record.selfService,
-				note: record.note,
-				photos: record.photos,
-				date: record.date,
-				createdAt: record.createdAt,
-			};
+                                note: record.note,
+                                photos: record.photos?.map((p) => p.toString("base64")),
+                                date: record.date,
+                                createdAt: record.createdAt,
+                        };
 
 			new Succ(201, "Service record created", payload);
 			return payload;
@@ -97,11 +97,11 @@ class ServiceRecordService {
 				mileage: record.mileage,
 				shop: record.shop,
 				selfService: record.selfService,
-				note: record.note,
-				photos: record.photos,
-				date: record.date,
-				createdAt: record.createdAt,
-			};
+                                note: record.note,
+                                photos: record.photos?.map((p) => p.toString("base64")),
+                                date: record.date,
+                                createdAt: record.createdAt,
+                        };
 
 			new Succ(200, "Service record fetched", payload);
 			return payload;
@@ -125,11 +125,11 @@ class ServiceRecordService {
 				mileage: r.mileage,
 				shop: r.shop,
 				selfService: r.selfService,
-				note: r.note,
-				photos: r.photos,
-				date: r.date,
-				createdAt: r.createdAt,
-			}));
+                                note: r.note,
+                                photos: r.photos?.map((p) => p.toString("base64")),
+                                date: r.date,
+                                createdAt: r.createdAt,
+                        }));
 			new Succ(200, "Fetched service records", payload);
 			return payload;
 		} catch (err: any) {
@@ -141,8 +141,8 @@ class ServiceRecordService {
 	static async update(
 		id: string,
 		userId: string,
-		payload: Partial<Pick<IServiceRecord, "vehicleId" | "serviceType" | "customType" | "itemName" | "cost" | "mileage" | "shop" | "selfService" | "note" | "photos" | "date">>,
-	): Promise<ServiceRecordPayload> {
+                payload: Partial<Pick<IServiceRecord, "vehicleId" | "serviceType" | "customType" | "itemName" | "cost" | "mileage" | "shop" | "selfService" | "note" | "photos" | "date">>,
+        ): Promise<ServiceRecordPayload> {
 		try {
 			const updated = await ServiceRecord.findOneAndUpdate({ _id: id, userId }, payload, { new: true });
 			if (!updated) {
@@ -160,11 +160,11 @@ class ServiceRecordService {
 				mileage: updated.mileage,
 				shop: updated.shop,
 				selfService: updated.selfService,
-				note: updated.note,
-				photos: updated.photos,
-				date: updated.date,
-				createdAt: updated.createdAt,
-			};
+                                note: updated.note,
+                                photos: updated.photos?.map((p) => p.toString("base64")),
+                                date: updated.date,
+                                createdAt: updated.createdAt,
+                        };
 			new Succ(200, "Service record updated", result);
 			return result;
 		} catch (err: any) {

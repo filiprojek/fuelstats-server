@@ -6,21 +6,26 @@ class ServiceRecordController {
 	static async create(req: Request, res: Response): Promise<Response> {
 		try {
 			const userId = (req as any).user.sub as string;
-			const dto = {
-				userId,
-				vehicleId: req.body.vehicleId,
-				serviceType: req.body.serviceType,
-				customType: req.body.customType,
-				itemName: req.body.itemName,
-				cost: req.body.cost,
-				mileage: req.body.mileage,
-				shop: req.body.shop,
-				selfService: req.body.selfService,
-				note: req.body.note,
-				photos: req.body.photos,
-				date: req.body.date,
-			};
-			const record = await ServiceRecordService.create(dto);
+                        const photos = Array.isArray(req.body.photos)
+                                ? (req.body.photos as string[]).map((p) => Buffer.from(p, "base64"))
+                                : req.body.photos
+                                        ? [Buffer.from(req.body.photos as string, "base64")]
+                                        : undefined;
+                        const dto = {
+                                userId,
+                                vehicleId: req.body.vehicleId,
+                                serviceType: req.body.serviceType,
+                                customType: req.body.customType,
+                                itemName: req.body.itemName,
+                                cost: Number(req.body.cost),
+                                mileage: Number(req.body.mileage),
+                                shop: req.body.shop,
+                                selfService: req.body.selfService === "true" || req.body.selfService === true,
+                                note: req.body.note,
+                                photos,
+                                date: new Date(req.body.date),
+                        };
+                        const record = await ServiceRecordService.create(dto);
 			new Succ(201, "Service record created", record);
 			return res.status(201).json(record);
 		} catch (err: any) {
@@ -62,20 +67,27 @@ class ServiceRecordController {
 		try {
 			const userId = (req as any).user.sub as string;
 			const id = req.params.id;
-			const payload = {
-				vehicleId: req.body.vehicleId,
-				serviceType: req.body.serviceType,
-				customType: req.body.customType,
-				itemName: req.body.itemName,
-				cost: req.body.cost,
-				mileage: req.body.mileage,
-				shop: req.body.shop,
-				selfService: req.body.selfService,
-				note: req.body.note,
-				photos: req.body.photos,
-				date: req.body.date,
-			};
-			const record = await ServiceRecordService.update(id, userId, payload);
+                        const photos = Array.isArray(req.body.photos)
+                                ? (req.body.photos as string[]).map((p) => Buffer.from(p, "base64"))
+                                : req.body.photos
+                                        ? [Buffer.from(req.body.photos as string, "base64")]
+                                        : undefined;
+                        const payload: any = {
+                                vehicleId: req.body.vehicleId,
+                                serviceType: req.body.serviceType,
+                                customType: req.body.customType,
+                                itemName: req.body.itemName,
+                                cost: req.body.cost ? Number(req.body.cost) : undefined,
+                                mileage: req.body.mileage ? Number(req.body.mileage) : undefined,
+                                shop: req.body.shop,
+                                selfService: req.body.selfService === "true" || req.body.selfService === true,
+                                note: req.body.note,
+                                date: req.body.date ? new Date(req.body.date) : undefined,
+                        };
+                        if (photos) {
+                                payload.photos = photos;
+                        }
+                        const record = await ServiceRecordService.update(id, userId, payload);
 			new Succ(200, "Service record updated", record);
 			return res.status(200).json(record);
 		} catch (err: any) {

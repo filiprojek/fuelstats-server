@@ -422,6 +422,7 @@ components:
           type: array
           items:
             type: string
+            format: byte
         date:
           type: string
           format: date-time
@@ -454,6 +455,7 @@ components:
           type: array
           items:
             type: string
+            format: byte
         date:
           type: string
           format: date-time

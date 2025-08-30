@@ -10,10 +10,10 @@ export interface IServiceRecord extends Document {
 	mileage: number;
 	shop?: string;
 	selfService?: boolean;
-	note?: string;
-	photos?: string[];
-	date: Date;
-	createdAt: Date;
+        note?: string;
+        photos?: Buffer[];
+        date: Date;
+        createdAt: Date;
 }
 
 const serviceRecordSchema = new Schema<IServiceRecord>(
@@ -27,9 +27,9 @@ const serviceRecordSchema = new Schema<IServiceRecord>(
 		mileage: { type: Number, required: true },
 		shop: { type: String },
 		selfService: { type: Boolean, default: false },
-		note: { type: String },
-		photos: { type: [String], default: [] },
-		date: { type: Date, required: true },
+                note: { type: String },
+                photos: { type: [Buffer], default: [] },
+                date: { type: Date, required: true },
 	},
 	{ timestamps: { createdAt: true, updatedAt: false } },
 );

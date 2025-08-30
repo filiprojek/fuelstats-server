@@ -30,30 +30,35 @@ describe("ServiceRecordController – POST /api/v1/services", () => {
 		expect(res.body).toMatchObject({ message: expect.stringContaining("Unauthorized") });
 	});
 
-	it("calls ServiceRecordService.create and returns 201 + payload", async () => {
-		const spy = jest.spyOn(ServiceRecordService, "create").mockResolvedValue(returned as any);
+        it("calls ServiceRecordService.create and returns 201 + payload", async () => {
+                const spy = jest.spyOn(ServiceRecordService, "create").mockResolvedValue(returned as any);
 
-		const res = await request(app).post("/api/v1/services").set("Authorization", `Bearer ${token}`).send({
-			vehicleId: createDto.vehicleId,
-			serviceType: createDto.serviceType,
-			itemName: createDto.itemName,
-			cost: createDto.cost,
-			mileage: createDto.mileage,
-			date: createDto.date,
-		});
+                const res = await request(app)
+                        .post("/api/v1/services")
+                        .set("Authorization", `Bearer ${token}`)
+                        .send({
+                                vehicleId: createDto.vehicleId,
+                                serviceType: createDto.serviceType,
+                                itemName: createDto.itemName,
+                                cost: createDto.cost,
+                                mileage: createDto.mileage,
+                                date: createDto.date,
+                        });
 
-		expect(spy).toHaveBeenCalledWith({
-			userId,
-			vehicleId: createDto.vehicleId,
-			serviceType: createDto.serviceType,
-			itemName: createDto.itemName,
-			cost: createDto.cost,
-			mileage: createDto.mileage,
-			date: createDto.date,
-		});
-		expect(res.status).toBe(201);
-		expect(res.body).toEqual(returned);
-	});
+                expect(spy).toHaveBeenCalledWith(
+                        expect.objectContaining({
+                                userId,
+                                vehicleId: createDto.vehicleId,
+                                serviceType: createDto.serviceType,
+                                itemName: createDto.itemName,
+                                cost: createDto.cost,
+                                mileage: createDto.mileage,
+                                date: new Date(createDto.date),
+                        }),
+                );
+                expect(res.status).toBe(201);
+                expect(res.body).toEqual(returned);
+        });
 });
 
 describe("ServiceRecordController – PUT /api/v1/services/:id", () => {
@@ -84,15 +89,18 @@ describe("ServiceRecordController – PUT /api/v1/services/:id", () => {
 		expect(res.body).toMatchObject({ message: expect.stringContaining("Unauthorized") });
 	});
 
-	it("calls ServiceRecordService.update and returns 200 + payload", async () => {
-		const spy = jest.spyOn(ServiceRecordService, "update").mockResolvedValue(returned as any);
+        it("calls ServiceRecordService.update and returns 200 + payload", async () => {
+                const spy = jest.spyOn(ServiceRecordService, "update").mockResolvedValue(returned as any);
 
-		const res = await request(app).put(`/api/v1/services/${recordId}`).set("Authorization", `Bearer ${token}`).send(updatePayload);
+                const res = await request(app)
+                        .put(`/api/v1/services/${recordId}`)
+                        .set("Authorization", `Bearer ${token}`)
+                        .send(updatePayload);
 
-		expect(spy).toHaveBeenCalledWith(recordId, userId, updatePayload);
-		expect(res.status).toBe(200);
-		expect(res.body).toEqual(returned);
-	});
+                expect(spy).toHaveBeenCalledWith(recordId, userId, expect.objectContaining(updatePayload));
+                expect(res.status).toBe(200);
+                expect(res.body).toEqual(returned);
+        });
 
 	it("returns 404 when ServiceRecordService.update throws 'Service record not found'", async () => {
 		jest.spyOn(ServiceRecordService, "update").mockRejectedValue(new Error("Service record not found"));

@@ -2,19 +2,21 @@ import ServiceRecordService, { CreateServiceRecordDTO } from "../src/services/Se
 import ServiceRecord from "../src/models/ServiceRecord";
 
 describe("ServiceRecordService", () => {
-	const dto: CreateServiceRecordDTO = {
-		userId: "user1",
-		vehicleId: "veh1",
-		serviceType: "oil_filter",
-		itemName: "OEM",
-		cost: 50,
-		mileage: 12000,
-		date: new Date("2024-01-01"),
-		shop: "Home",
-		selfService: true,
-		note: "Changed oil filter",
-		photos: ["url1"],
-	};
+        const photoBuf = Buffer.from("img");
+        const base64Photo = photoBuf.toString("base64");
+        const dto: CreateServiceRecordDTO = {
+                userId: "user1",
+                vehicleId: "veh1",
+                serviceType: "oil_filter",
+                itemName: "OEM",
+                cost: 50,
+                mileage: 12000,
+                date: new Date("2024-01-01"),
+                shop: "Home",
+                selfService: true,
+                note: "Changed oil filter",
+                photos: [photoBuf],
+        };
 
 	afterEach(() => {
 		jest.restoreAllMocks();
@@ -28,24 +30,24 @@ describe("ServiceRecordService", () => {
 				return Promise.resolve(this);
 			});
 
-			const result = await ServiceRecordService.create(dto);
+                        const result = await ServiceRecordService.create(dto);
 
-			expect(saveSpy).toHaveBeenCalled();
-			expect(result).toMatchObject({
-				userId: dto.userId,
-				vehicleId: dto.vehicleId,
-				serviceType: dto.serviceType,
-				itemName: dto.itemName,
-				cost: dto.cost,
-				mileage: dto.mileage,
-				shop: dto.shop,
-				selfService: dto.selfService,
-				note: dto.note,
-				photos: dto.photos,
-				date: dto.date,
-				createdAt: now,
-			});
-		});
+                        expect(saveSpy).toHaveBeenCalled();
+                        expect(result).toMatchObject({
+                                userId: dto.userId,
+                                vehicleId: dto.vehicleId,
+                                serviceType: dto.serviceType,
+                                itemName: dto.itemName,
+                                cost: dto.cost,
+                                mileage: dto.mileage,
+                                shop: dto.shop,
+                                selfService: dto.selfService,
+                                note: dto.note,
+                                photos: [base64Photo],
+                                date: dto.date,
+                                createdAt: now,
+                        });
+                });
 
 		it("throws if save fails", async () => {
 			const err = new Error("DB failure");
@@ -57,13 +59,27 @@ describe("ServiceRecordService", () => {
 	describe("getById()", () => {
 		const id = "srv1";
 		it("returns payload when found", async () => {
-			const now = new Date();
-			const found = { ...dto, id, createdAt: now };
-			const spy = jest.spyOn(ServiceRecord, "findOne").mockResolvedValue(found as any);
-			const result = await ServiceRecordService.getById(id, dto.userId);
-			expect(spy).toHaveBeenCalledWith({ _id: id, userId: dto.userId });
-			expect(result).toEqual(found);
-		});
+                        const now = new Date();
+                        const found = { ...dto, id, createdAt: now };
+                        const spy = jest.spyOn(ServiceRecord, "findOne").mockResolvedValue(found as any);
+                        const result = await ServiceRecordService.getById(id, dto.userId);
+                        expect(spy).toHaveBeenCalledWith({ _id: id, userId: dto.userId });
+                        expect(result).toEqual({
+                                id,
+                                userId: dto.userId,
+                                vehicleId: dto.vehicleId,
+                                serviceType: dto.serviceType,
+                                itemName: dto.itemName,
+                                cost: dto.cost,
+                                mileage: dto.mileage,
+                                date: dto.date,
+                                shop: dto.shop,
+                                selfService: dto.selfService,
+                                note: dto.note,
+                                photos: [base64Photo],
+                                createdAt: now,
+                        });
+                });
 
 		it("returns null when not found", async () => {
 			jest.spyOn(ServiceRecord, "findOne").mockResolvedValue(null);
@@ -80,12 +96,28 @@ describe("ServiceRecordService", () => {
 
 	describe("list()", () => {
 		it("returns records for user", async () => {
-			const docs = [{ ...dto, id: "r1", createdAt: new Date() }];
-			const spy = jest.spyOn(ServiceRecord, "find").mockResolvedValue(docs as any);
-			const res = await ServiceRecordService.list(dto.userId);
-			expect(spy).toHaveBeenCalledWith({ userId: dto.userId });
-			expect(res).toEqual(docs);
-		});
+                        const docs = [{ ...dto, id: "r1", createdAt: new Date() }];
+                        const spy = jest.spyOn(ServiceRecord, "find").mockResolvedValue(docs as any);
+                        const res = await ServiceRecordService.list(dto.userId);
+                        expect(spy).toHaveBeenCalledWith({ userId: dto.userId });
+                        expect(res).toEqual([
+                                {
+                                        id: "r1",
+                                        userId: dto.userId,
+                                        vehicleId: dto.vehicleId,
+                                        serviceType: dto.serviceType,
+                                        itemName: dto.itemName,
+                                        cost: dto.cost,
+                                        mileage: dto.mileage,
+                                        shop: dto.shop,
+                                        selfService: dto.selfService,
+                                        note: dto.note,
+                                        photos: [base64Photo],
+                                        date: dto.date,
+                                        createdAt: docs[0].createdAt,
+                                },
+                        ]);
+                });
 
 		it("throws if find fails", async () => {
 			const err = new Error("DB failure");
@@ -100,13 +132,28 @@ describe("ServiceRecordService", () => {
 		const updatePayload = { note: "updated" };
 
 		it("updates and returns payload", async () => {
-			const now = new Date();
-			const updated = { ...dto, ...updatePayload, id, createdAt: now };
-			const spy = jest.spyOn(ServiceRecord, "findOneAndUpdate").mockResolvedValue(updated as any);
-			const result = await ServiceRecordService.update(id, userId, updatePayload);
-			expect(spy).toHaveBeenCalledWith({ _id: id, userId }, updatePayload, { new: true });
-			expect(result).toEqual(updated);
-		});
+                        const now = new Date();
+                        const updated = { ...dto, ...updatePayload, id, createdAt: now };
+                        const spy = jest.spyOn(ServiceRecord, "findOneAndUpdate").mockResolvedValue(updated as any);
+                        const result = await ServiceRecordService.update(id, userId, updatePayload);
+                        expect(spy).toHaveBeenCalledWith({ _id: id, userId }, updatePayload, { new: true });
+                        expect(result).toEqual({
+                                ...updatePayload,
+                                id,
+                                userId: dto.userId,
+                                vehicleId: dto.vehicleId,
+                                serviceType: dto.serviceType,
+                                itemName: dto.itemName,
+                                cost: dto.cost,
+                                mileage: dto.mileage,
+                                shop: dto.shop,
+                                selfService: dto.selfService,
+                                note: updatePayload.note,
+                                photos: [base64Photo],
+                                date: dto.date,
+                                createdAt: now,
+                        });
+                });
 
 		it("throws when not found", async () => {
 			jest.spyOn(ServiceRecord, "findOneAndUpdate").mockResolvedValue(null as any);
