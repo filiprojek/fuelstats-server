@@ -4,6 +4,7 @@ import AuthRoutes from "./AuthRoutes";
 import UserRoutes from "./UserRoutes";
 import VehicleRoutes from "./VehicleRoutes";
 import RefuelRoutes from "./RefuelRoutes";
+import ServiceRecordRoutes from "./ServiceRecordRoutes";
 
 export const router = Router();
 
@@ -12,6 +13,7 @@ router.use("/api/v1/auth", AuthRoutes);
 router.use("/api/v1/user", UserRoutes);
 router.use("/api/v1/vehicles", VehicleRoutes);
 router.use("/api/v1/refuels", RefuelRoutes);
+router.use("/api/v1/services", ServiceRecordRoutes);
 
 // 404
 router.use((req: Request, res: Response) => {
