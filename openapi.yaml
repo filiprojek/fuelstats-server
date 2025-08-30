@@ -201,6 +201,80 @@ paths:
       responses:
         '204':
           description: Deleted
+
+  '/api/v1/services':
+    get:
+      summary: List service records
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Array of service records
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ServiceRecord'
+    post:
+      summary: Create service record
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewServiceRecord'
+      responses:
+        '201':
+          description: Created service record
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceRecord'
+  '/api/v1/services/{id}':
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      summary: Get service record by ID
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Service record
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceRecord'
+    put:
+      summary: Update service record
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewServiceRecord'
+      responses:
+        '200':
+          description: Updated service record
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceRecord'
+    delete:
+      summary: Delete service record
+      security:
+        - bearerAuth: []
+      responses:
+        '204':
+          description: Deleted
 components:
   securitySchemes:
     bearerAuth:
@@ -319,3 +393,68 @@ components:
           type: number
         mileage:
           type: number
+    ServiceRecord:
+      type: object
+      properties:
+        id:
+          type: string
+        userId:
+          type: string
+        vehicleId:
+          type: string
+        serviceType:
+          type: string
+        customType:
+          type: string
+        itemName:
+          type: string
+        cost:
+          type: number
+        mileage:
+          type: number
+        shop:
+          type: string
+        selfService:
+          type: boolean
+        note:
+          type: string
+        photos:
+          type: array
+          items:
+            type: string
+        date:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+    NewServiceRecord:
+      type: object
+      required: [vehicleId, serviceType, cost, mileage, date]
+      properties:
+        vehicleId:
+          type: string
+        serviceType:
+          type: string
+        customType:
+          type: string
+        itemName:
+          type: string
+        cost:
+          type: number
+        mileage:
+          type: number
+        shop:
+          type: string
+        selfService:
+          type: boolean
+        note:
+          type: string
+        photos:
+          type: array
+          items:
+            type: string
+        date:
+          type: string
+          format: date-time
+
