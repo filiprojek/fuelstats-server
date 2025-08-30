@@ -1,16 +1,34 @@
 import { Request, Response } from "express";
 import ServiceRecordService from "../services/ServiceRecordService";
 import { Err, Succ } from "../services/globalService";
+import fs from "fs-extra";
+import path from "path";
+import { randomUUID } from "crypto";
+
+const saveBase64Photo = async (base64: string): Promise<string> => {
+        const match = base64.match(/^data:(image\/\w+);base64,(.+)$/);
+        const data = match ? match[2] : base64;
+        const mime = match ? match[1] : "image/png";
+        const ext = mime.split("/")[1];
+        const filename = `${randomUUID()}.${ext}`;
+        const uploadDir = path.join(__dirname, "../public/uploads");
+        await fs.ensureDir(uploadDir);
+        await fs.writeFile(path.join(uploadDir, filename), data, "base64");
+        return filename;
+};
 
 class ServiceRecordController {
 	static async create(req: Request, res: Response): Promise<Response> {
 		try {
-			const userId = (req as any).user.sub as string;
-                        const photos = Array.isArray(req.body.photos)
-                                ? (req.body.photos as string[]).map((p) => Buffer.from(p, "base64"))
+                        const userId = (req as any).user.sub as string;
+                        const photoInputs = Array.isArray(req.body.photos)
+                                ? (req.body.photos as string[])
                                 : req.body.photos
-                                        ? [Buffer.from(req.body.photos as string, "base64")]
+                                        ? [req.body.photos as string]
                                         : undefined;
+                        const photos = photoInputs
+                                ? await Promise.all(photoInputs.map(saveBase64Photo))
+                                : undefined;
                         const dto = {
                                 userId,
                                 vehicleId: req.body.vehicleId,
@@ -65,12 +83,12 @@ class ServiceRecordController {
 
 	static async update(req: Request, res: Response): Promise<Response> {
 		try {
-			const userId = (req as any).user.sub as string;
-			const id = req.params.id;
-                        const photos = Array.isArray(req.body.photos)
-                                ? (req.body.photos as string[]).map((p) => Buffer.from(p, "base64"))
+                        const userId = (req as any).user.sub as string;
+                        const id = req.params.id;
+                        const photoInputs = Array.isArray(req.body.photos)
+                                ? (req.body.photos as string[])
                                 : req.body.photos
-                                        ? [Buffer.from(req.body.photos as string, "base64")]
+                                        ? [req.body.photos as string]
                                         : undefined;
                         const payload: any = {
                                 vehicleId: req.body.vehicleId,
@@ -84,12 +102,12 @@ class ServiceRecordController {
                                 note: req.body.note,
                                 date: req.body.date ? new Date(req.body.date) : undefined,
                         };
-                        if (photos) {
-                                payload.photos = photos;
+                        if (photoInputs) {
+                                payload.photos = await Promise.all(photoInputs.map(saveBase64Photo));
                         }
                         const record = await ServiceRecordService.update(id, userId, payload);
-			new Succ(200, "Service record updated", record);
-			return res.status(200).json(record);
+                        new Succ(200, "Service record updated", record);
+                        return res.status(200).json(record);
 		} catch (err: any) {
 			if (err.message === "Service record not found") {
 				new Err(404, "Service record not found", err);

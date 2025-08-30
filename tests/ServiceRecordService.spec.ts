@@ -2,8 +2,8 @@ import ServiceRecordService, { CreateServiceRecordDTO } from "../src/services/Se
 import ServiceRecord from "../src/models/ServiceRecord";
 
 describe("ServiceRecordService", () => {
-        const photoBuf = Buffer.from("img");
-        const base64Photo = photoBuf.toString("base64");
+        const photoName = "img.jpg";
+        const photoUrl = `/uploads/${photoName}`;
         const dto: CreateServiceRecordDTO = {
                 userId: "user1",
                 vehicleId: "veh1",
@@ -15,7 +15,7 @@ describe("ServiceRecordService", () => {
                 shop: "Home",
                 selfService: true,
                 note: "Changed oil filter",
-                photos: [photoBuf],
+                photos: [photoName],
         };
 
 	afterEach(() => {
@@ -43,7 +43,7 @@ describe("ServiceRecordService", () => {
                                 shop: dto.shop,
                                 selfService: dto.selfService,
                                 note: dto.note,
-                                photos: [base64Photo],
+                                photos: [photoUrl],
                                 date: dto.date,
                                 createdAt: now,
                         });
@@ -76,7 +76,7 @@ describe("ServiceRecordService", () => {
                                 shop: dto.shop,
                                 selfService: dto.selfService,
                                 note: dto.note,
-                                photos: [base64Photo],
+                                photos: [photoUrl],
                                 createdAt: now,
                         });
                 });
@@ -112,7 +112,7 @@ describe("ServiceRecordService", () => {
                                         shop: dto.shop,
                                         selfService: dto.selfService,
                                         note: dto.note,
-                                        photos: [base64Photo],
+                                        photos: [photoUrl],
                                         date: dto.date,
                                         createdAt: docs[0].createdAt,
                                 },
@@ -149,7 +149,7 @@ describe("ServiceRecordService", () => {
                                 shop: dto.shop,
                                 selfService: dto.selfService,
                                 note: updatePayload.note,
-                                photos: [base64Photo],
+                                photos: [photoUrl],
                                 date: dto.date,
                                 createdAt: now,
                         });

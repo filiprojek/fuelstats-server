@@ -11,7 +11,7 @@ export interface IServiceRecord extends Document {
 	shop?: string;
 	selfService?: boolean;
         note?: string;
-        photos?: Buffer[];
+        photos?: string[];
         date: Date;
         createdAt: Date;
 }
@@ -28,9 +28,9 @@ const serviceRecordSchema = new Schema<IServiceRecord>(
 		shop: { type: String },
 		selfService: { type: Boolean, default: false },
                 note: { type: String },
-                photos: { type: [Buffer], default: [] },
+                photos: { type: [String], default: [] },
                 date: { type: Date, required: true },
-	},
+        },
 	{ timestamps: { createdAt: true, updatedAt: false } },
 );
 

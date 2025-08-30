@@ -12,7 +12,7 @@ export interface CreateServiceRecordDTO {
 	shop?: string;
 	selfService?: boolean;
         note?: string;
-        photos?: Buffer[];
+        photos?: string[];
         date: Date;
 }
 
@@ -65,7 +65,7 @@ class ServiceRecordService {
 				shop: record.shop,
 				selfService: record.selfService,
                                 note: record.note,
-                                photos: record.photos?.map((p) => p.toString("base64")),
+                                photos: record.photos?.map((p) => `/uploads/${p}`),
                                 date: record.date,
                                 createdAt: record.createdAt,
                         };
@@ -98,7 +98,7 @@ class ServiceRecordService {
 				shop: record.shop,
 				selfService: record.selfService,
                                 note: record.note,
-                                photos: record.photos?.map((p) => p.toString("base64")),
+                                photos: record.photos?.map((p) => `/uploads/${p}`),
                                 date: record.date,
                                 createdAt: record.createdAt,
                         };
@@ -126,7 +126,7 @@ class ServiceRecordService {
 				shop: r.shop,
 				selfService: r.selfService,
                                 note: r.note,
-                                photos: r.photos?.map((p) => p.toString("base64")),
+                                photos: r.photos?.map((p) => `/uploads/${p}`),
                                 date: r.date,
                                 createdAt: r.createdAt,
                         }));
@@ -161,7 +161,7 @@ class ServiceRecordService {
 				shop: updated.shop,
 				selfService: updated.selfService,
                                 note: updated.note,
-                                photos: updated.photos?.map((p) => p.toString("base64")),
+                                photos: updated.photos?.map((p) => `/uploads/${p}`),
                                 date: updated.date,
                                 createdAt: updated.createdAt,
                         };

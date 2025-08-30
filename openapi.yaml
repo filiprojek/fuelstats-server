@@ -422,7 +422,7 @@ components:
           type: array
           items:
             type: string
-            format: byte
+            format: uri
         date:
           type: string
           format: date-time
