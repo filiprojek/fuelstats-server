@@ -22,10 +22,10 @@ services:
       ME_CONFIG_MONGODB_URL: mongodb://root:root@mongodb:27017/
       ME_CONFIG_BASICAUTH: false
 
-  fuelstats-server:
+  api-server:
     build:
       context: .
-      dockerfile: Dockerfile   # or Dockerfile.bun
+      dockerfile: Dockerfile
     container_name: fuelstats-server
     restart: unless-stopped
     depends_on:
