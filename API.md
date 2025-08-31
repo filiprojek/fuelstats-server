@@ -371,3 +371,138 @@ fetch(`http://localhost:3000/api/v1/refuels/${id}`, {
 });
 ```
 
+### GET /api/v1/services
+List service records.
+
+#### Curl
+```bash
+curl http://localhost:3000/api/v1/services \
+  -H "Authorization: Bearer TOKEN"
+```
+
+#### fetch
+```javascript
+fetch('http://localhost:3000/api/v1/services', {
+  headers: { Authorization: 'Bearer TOKEN' }
+});
+```
+
+### POST /api/v1/services
+Create a service record.
+
+**Body**
+```json
+{
+  "vehicleId": "id-of-vehicle",
+  "serviceType": "oil_filter",
+  "customType": "optional",
+  "itemName": "model or name",
+  "cost": 100,
+  "mileage": 12345,
+  "shop": "My Garage",
+  "selfService": true,
+  "note": "optional",
+  "photos": ["url1"],
+  "date": "2024-01-01T00:00:00.000Z"
+}
+```
+
+#### Curl
+```bash
+curl -X POST http://localhost:3000/api/v1/services \
+  -H "Authorization: Bearer TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"vehicleId":"id","serviceType":"oil_filter","cost":100,"mileage":12345,"date":"2024-01-01T00:00:00.000Z"}'
+```
+
+#### fetch
+```javascript
+fetch('http://localhost:3000/api/v1/services', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    Authorization: 'Bearer TOKEN'
+  },
+  body: JSON.stringify({
+    vehicleId: 'id',
+    serviceType: 'oil_filter',
+    cost: 100,
+    mileage: 12345,
+    date: '2024-01-01T00:00:00.000Z'
+  })
+});
+```
+
+### GET /api/v1/services/{id}
+Get a service record by ID.
+
+#### Curl
+```bash
+curl http://localhost:3000/api/v1/services/SERVICE_ID \
+  -H "Authorization: Bearer TOKEN"
+```
+
+#### fetch
+```javascript
+fetch(`http://localhost:3000/api/v1/services/${id}`, {
+  headers: { Authorization: 'Bearer TOKEN' }
+});
+```
+
+### PUT /api/v1/services/{id}
+Update a service record. Same body fields as service creation.
+
+**Body**
+```json
+{
+  "vehicleId": "id-of-vehicle",
+  "serviceType": "air_filter",
+  "cost": 90,
+  "mileage": 13000,
+  "date": "2024-02-01T00:00:00.000Z"
+}
+```
+
+#### Curl
+```bash
+curl -X PUT http://localhost:3000/api/v1/services/SERVICE_ID \
+  -H "Authorization: Bearer TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"vehicleId":"id-of-vehicle","serviceType":"air_filter","cost":90,"mileage":13000,"date":"2024-02-01T00:00:00.000Z"}'
+```
+
+#### fetch
+```javascript
+fetch(`http://localhost:3000/api/v1/services/${id}`, {
+  method: 'PUT',
+  headers: {
+    'Content-Type': 'application/json',
+    Authorization: 'Bearer TOKEN'
+  },
+  body: JSON.stringify({
+    vehicleId: 'id-of-vehicle',
+    serviceType: 'air_filter',
+    cost: 90,
+    mileage: 13000,
+    date: '2024-02-01T00:00:00.000Z'
+  })
+});
+```
+
+### DELETE /api/v1/services/{id}
+Delete a service record.
+
+#### Curl
+```bash
+curl -X DELETE http://localhost:3000/api/v1/services/SERVICE_ID \
+  -H "Authorization: Bearer TOKEN"
+```
+
+#### fetch
+```javascript
+fetch(`http://localhost:3000/api/v1/services/${id}`, {
+  method: 'DELETE',
+  headers: { Authorization: 'Bearer TOKEN' }
+});
+```
+
