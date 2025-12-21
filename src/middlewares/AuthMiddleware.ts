@@ -9,11 +9,22 @@ export interface AuthRequest extends Request {
 
 export function requireAuth(req: AuthRequest, res: Response, next: NextFunction) {
 	const authHeader = req.headers.authorization;
-	if (!authHeader || !authHeader.startsWith("Bearer ")) {
+	const authCookie = req.cookies.jwt;
+
+	if (( !authHeader || !authHeader.startsWith("Bearer ")) && !authCookie) {
 		new Err(401, "No token provided");
 		return res.status(401).json({ message: "Unauthorized" });
 	}
-	const token = authHeader.split(" ")[1];
+
+	let token = null;
+	if(authHeader) {
+		token = authHeader.split(" ")[1];
+		console.log("Verifying using Bearer auth header...")
+	} else if(authCookie) {
+		console.log("Verifying using jwt auth cookie...")
+		token = authCookie
+	}
+
 	try {
 		const decoded = jwt.verify(token, env.JWT_SECRET) as any;
 		req.user = decoded;

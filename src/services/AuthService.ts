@@ -4,7 +4,13 @@ import jwt from "jsonwebtoken";
 import env from "../config/environment";
 import { Err, Succ } from "../services/globalService";
 
+
 class AuthService {
+	/**
+	 * Constant that stores JWT expire time in seconds
+	 */
+	static jwtMaxAge = 3 * 24 * 60 * 60 // 3 days in seconds
+
 	/**
 	 * Register a new user with email/password.
 	 * @returns The created user's id, email, and username.
@@ -57,7 +63,7 @@ class AuthService {
 
 		const payload = { sub: user.id, email: user.email };
 		const token = jwt.sign(payload, env.JWT_SECRET, {
-			expiresIn: "1h",
+			expiresIn: this.jwtMaxAge,
 		});
 
 		new Succ(200, `Token issued for user ${user.id}`);

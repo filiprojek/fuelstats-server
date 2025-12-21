@@ -10,7 +10,7 @@
 	"license": "ISC",
 	"scripts": {
 		"start": "node dist/server.js",
-		"start:dev": "nodemon src/server.ts",
+		"start:dev": "npx nodemon src/server.ts",
 		"test": "jest",
 		"clean": "rimraf dist/*",
 		"copy-assets": "npx ts-node src/utils/copyAssets",
