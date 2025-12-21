@@ -61,7 +61,7 @@ describe("AuthService", () => {
 				password: "pass",
 			});
 
-			expect(jwt.sign).toHaveBeenCalledWith(expect.objectContaining({ sub: "123", email: "test@example.com" }), expect.any(String), { expiresIn: "1h" });
+			expect(jwt.sign).toHaveBeenCalledWith(expect.objectContaining({ sub: "123", email: "test@example.com" }), expect.any(String), { expiresIn: 259200 });
 			expect(token).toBe("token123");
 		});
 	});
