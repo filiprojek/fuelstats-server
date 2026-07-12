@@ -6,6 +6,9 @@ import path from "path";
 import { randomUUID } from "crypto";
 
 const saveBase64Photo = async (base64: string): Promise<string> => {
+	if (!base64.startsWith("data:image/")) {
+		return path.basename(base64);
+	}
 	const match = base64.match(/^data:(image\/\w+);base64,(.+)$/);
 	const data = match ? match[2] : base64;
 	const mime = match ? match[1] : "image/png";
