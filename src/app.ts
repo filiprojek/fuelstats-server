@@ -40,3 +40,11 @@ app.use(cookieParser());
 
 // Routes
 app.use(routes);
+
+// SPA fallback: Serve index.html for client-side routing on non-API routes
+app.get(/.*/, (req, res, next) => {
+	if (req.path.startsWith("/api/")) {
+		return next();
+	}
+	res.sendFile(path.join(__dirname, "public", "index.html"));
+});
