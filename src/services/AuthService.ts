@@ -4,12 +4,11 @@ import jwt from "jsonwebtoken";
 import env from "../config/environment";
 import { Err, Succ } from "../services/globalService";
 
-
 class AuthService {
 	/**
 	 * Constant that stores JWT expire time in seconds
 	 */
-	static jwtMaxAge = 3 * 24 * 60 * 60 // 3 days in seconds
+	static jwtMaxAge = 3 * 24 * 60 * 60; // 3 days in seconds
 
 	/**
 	 * Register a new user with email/password.

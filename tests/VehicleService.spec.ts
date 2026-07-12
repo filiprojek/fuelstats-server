@@ -138,9 +138,7 @@ describe("VehicleService", () => {
 				isDefault: dto.isDefault!,
 				createdAt: now,
 			};
-			const spy = jest
-				.spyOn(Vehicle, "findOneAndUpdate")
-				.mockResolvedValue(updatedRecord as any);
+			const spy = jest.spyOn(Vehicle, "findOneAndUpdate").mockResolvedValue(updatedRecord as any);
 
 			const result = await VehicleService.update(id, userId, updatePayload);
 
@@ -151,10 +149,7 @@ describe("VehicleService", () => {
 		it("should throw if the vehicle is not found", async () => {
 			jest.spyOn(Vehicle, "findOneAndUpdate").mockResolvedValue(null as any);
 
-			await expect(VehicleService.update(id, userId, updatePayload)).rejects.toThrow(
-				"Vehicle not found",
-			);
-
+			await expect(VehicleService.update(id, userId, updatePayload)).rejects.toThrow("Vehicle not found");
 		});
 	});
 
@@ -184,4 +179,3 @@ describe("VehicleService", () => {
 		});
 	});
 });
-

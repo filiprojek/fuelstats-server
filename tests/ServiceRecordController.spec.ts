@@ -30,35 +30,32 @@ describe("ServiceRecordController – POST /api/v1/services", () => {
 		expect(res.body).toMatchObject({ message: expect.stringContaining("Unauthorized") });
 	});
 
-        it("calls ServiceRecordService.create and returns 201 + payload", async () => {
-                const spy = jest.spyOn(ServiceRecordService, "create").mockResolvedValue(returned as any);
+	it("calls ServiceRecordService.create and returns 201 + payload", async () => {
+		const spy = jest.spyOn(ServiceRecordService, "create").mockResolvedValue(returned as any);
 
-                const res = await request(app)
-                        .post("/api/v1/services")
-                        .set("Authorization", `Bearer ${token}`)
-                        .send({
-                                vehicleId: createDto.vehicleId,
-                                serviceType: createDto.serviceType,
-                                itemName: createDto.itemName,
-                                cost: createDto.cost,
-                                mileage: createDto.mileage,
-                                date: createDto.date,
-                        });
+		const res = await request(app).post("/api/v1/services").set("Authorization", `Bearer ${token}`).send({
+			vehicleId: createDto.vehicleId,
+			serviceType: createDto.serviceType,
+			itemName: createDto.itemName,
+			cost: createDto.cost,
+			mileage: createDto.mileage,
+			date: createDto.date,
+		});
 
-                expect(spy).toHaveBeenCalledWith(
-                        expect.objectContaining({
-                                userId,
-                                vehicleId: createDto.vehicleId,
-                                serviceType: createDto.serviceType,
-                                itemName: createDto.itemName,
-                                cost: createDto.cost,
-                                mileage: createDto.mileage,
-                                date: new Date(createDto.date),
-                        }),
-                );
-                expect(res.status).toBe(201);
-                expect(res.body).toEqual(returned);
-        });
+		expect(spy).toHaveBeenCalledWith(
+			expect.objectContaining({
+				userId,
+				vehicleId: createDto.vehicleId,
+				serviceType: createDto.serviceType,
+				itemName: createDto.itemName,
+				cost: createDto.cost,
+				mileage: createDto.mileage,
+				date: new Date(createDto.date),
+			}),
+		);
+		expect(res.status).toBe(201);
+		expect(res.body).toEqual(returned);
+	});
 });
 
 describe("ServiceRecordController – PUT /api/v1/services/:id", () => {
@@ -89,18 +86,15 @@ describe("ServiceRecordController – PUT /api/v1/services/:id", () => {
 		expect(res.body).toMatchObject({ message: expect.stringContaining("Unauthorized") });
 	});
 
-        it("calls ServiceRecordService.update and returns 200 + payload", async () => {
-                const spy = jest.spyOn(ServiceRecordService, "update").mockResolvedValue(returned as any);
+	it("calls ServiceRecordService.update and returns 200 + payload", async () => {
+		const spy = jest.spyOn(ServiceRecordService, "update").mockResolvedValue(returned as any);
 
-                const res = await request(app)
-                        .put(`/api/v1/services/${recordId}`)
-                        .set("Authorization", `Bearer ${token}`)
-                        .send(updatePayload);
+		const res = await request(app).put(`/api/v1/services/${recordId}`).set("Authorization", `Bearer ${token}`).send(updatePayload);
 
-                expect(spy).toHaveBeenCalledWith(recordId, userId, expect.objectContaining(updatePayload));
-                expect(res.status).toBe(200);
-                expect(res.body).toEqual(returned);
-        });
+		expect(spy).toHaveBeenCalledWith(recordId, userId, expect.objectContaining(updatePayload));
+		expect(res.status).toBe(200);
+		expect(res.body).toEqual(returned);
+	});
 
 	it("returns 404 when ServiceRecordService.update throws 'Service record not found'", async () => {
 		jest.spyOn(ServiceRecordService, "update").mockRejectedValue(new Error("Service record not found"));
@@ -206,5 +200,64 @@ describe("ServiceRecordController – DELETE /api/v1/services/:id", () => {
 		const res = await request(app).delete(`/api/v1/services/${recordId}`).set("Authorization", `Bearer ${token}`);
 		expect(res.status).toBe(500);
 		expect(res.body).toEqual({ message: "Service record deletion failed" });
+	});
+});
+
+describe("ServiceRecordController – GET /api/v1/services/export", () => {
+	const userId = "user123";
+	const token = jwt.sign({ sub: userId, email: "x@example.com" }, env.JWT_SECRET, { expiresIn: "1h" });
+
+	afterEach(() => {
+		jest.resetAllMocks();
+	});
+
+	it("calls ServiceRecordService.exportCSV and returns CSV content", async () => {
+		const csvData =
+			"id,vehicleId,serviceType,customType,itemName,cost,mileage,shop,selfService,note,date,createdAt\nsrv1,veh1,oil_change,,filter,100,1000,shop,true,,2026-07-12T16:23:59.000Z,2026-07-12T16:23:59.000Z";
+		const spy = jest.spyOn(ServiceRecordService, "exportCSV").mockResolvedValue(csvData);
+
+		const res = await request(app).get("/api/v1/services/export").set("Authorization", `Bearer ${token}`);
+
+		expect(spy).toHaveBeenCalledWith(userId, undefined);
+		expect(res.status).toBe(200);
+		expect(res.header["content-type"]).toContain("text/csv");
+		expect(res.text).toBe(csvData);
+	});
+
+	it("forwards vehicleId query param if provided", async () => {
+		const spy = jest.spyOn(ServiceRecordService, "exportCSV").mockResolvedValue("");
+		await request(app).get("/api/v1/services/export?vehicleId=veh123").set("Authorization", `Bearer ${token}`);
+		expect(spy).toHaveBeenCalledWith(userId, "veh123");
+	});
+});
+
+describe("ServiceRecordController – POST /api/v1/services/import", () => {
+	const userId = "user123";
+	const token = jwt.sign({ sub: userId, email: "x@example.com" }, env.JWT_SECRET, { expiresIn: "1h" });
+
+	afterEach(() => {
+		jest.resetAllMocks();
+	});
+
+	it("calls ServiceRecordService.importCSV and returns 201 with imported records", async () => {
+		const csvData = "vehicleId,serviceType,cost,mileage,date\nveh1,oil_change,100,1000,2026-07-12T16:23:59.000Z";
+		const importedRecords = [{ id: "srv1", userId, vehicleId: "veh1" }];
+		const spy = jest.spyOn(ServiceRecordService, "importCSV").mockResolvedValue(importedRecords as any);
+
+		const res = await request(app).post("/api/v1/services/import").set("Authorization", `Bearer ${token}`).set("Content-Type", "text/csv").send(csvData);
+
+		expect(spy).toHaveBeenCalledWith(userId, csvData, undefined);
+		expect(res.status).toBe(201);
+		expect(res.body.count).toBe(1);
+		expect(res.body.records).toEqual(importedRecords);
+	});
+
+	it("supports JSON body containing csv field", async () => {
+		const csvData = "vehicleId,serviceType,cost,mileage,date\nveh1,oil_change,100,1000,2026-07-12T16:23:59.000Z";
+		const spy = jest.spyOn(ServiceRecordService, "importCSV").mockResolvedValue([]);
+
+		await request(app).post("/api/v1/services/import").set("Authorization", `Bearer ${token}`).send({ csv: csvData });
+
+		expect(spy).toHaveBeenCalledWith(userId, csvData, undefined);
 	});
 });

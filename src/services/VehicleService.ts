@@ -65,17 +65,9 @@ class VehicleService {
 	}
 
 	/** DTO for updating a vehicle */
-	static async update(
-		id: string,
-		userId: string,
-		payload: Partial<Pick<IVehicle, "name" | "registrationPlate" | "fuelType" | "note" | "isDefault">>,
-	): Promise<VehiclePayload> {
+	static async update(id: string, userId: string, payload: Partial<Pick<IVehicle, "name" | "registrationPlate" | "fuelType" | "note" | "isDefault">>): Promise<VehiclePayload> {
 		try {
-			const updated = await Vehicle.findOneAndUpdate(
-				{ _id: id, userId },
-				payload,
-				{ new: true },
-			);
+			const updated = await Vehicle.findOneAndUpdate({ _id: id, userId }, payload, { new: true });
 
 			if (!updated) {
 				new Err(404, "Vehicle not found");
@@ -155,6 +147,31 @@ class VehicleService {
 			return payload;
 		} catch (err: any) {
 			new Err(500, "Vehicle fetch failed", err);
+			throw err;
+		}
+	}
+
+	/**
+	 * Get the default vehicle for a user.
+	 */
+	static async getDefaultVehicle(userId: string): Promise<VehiclePayload | null> {
+		try {
+			const vehicle = await Vehicle.findOne({ userId, isDefault: true });
+			if (!vehicle) {
+				return null;
+			}
+			return {
+				id: vehicle.id,
+				userId: vehicle.userId,
+				name: vehicle.name,
+				registrationPlate: vehicle.registrationPlate,
+				fuelType: vehicle.fuelType,
+				note: vehicle.note,
+				isDefault: vehicle.isDefault,
+				createdAt: vehicle.createdAt,
+			};
+		} catch (err: any) {
+			new Err(500, "Vehicle fetch default failed", err);
 			throw err;
 		}
 	}

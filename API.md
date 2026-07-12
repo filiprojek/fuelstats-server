@@ -371,6 +371,40 @@ fetch(`http://localhost:3000/api/v1/refuels/${id}`, {
 });
 ```
 
+### GET /api/v1/refuels/export
+Export refuel records as a CSV file. Optional `vehicleId` query parameter filters records by vehicle.
+
+#### Curl
+```bash
+curl http://localhost:3000/api/v1/refuels/export?vehicleId=VEHICLE_ID \
+  -H "Authorization: Bearer TOKEN"
+```
+
+### POST /api/v1/refuels/import
+Import refuel records from CSV. Optional `vehicleId` query parameter acts as the fallback vehicle if row-level `vehicleId` is omitted. Accepts raw CSV text body or JSON body with a `csv` property.
+
+**Body (Raw CSV)**
+```csv
+vehicleId,fuelType,note,liters,pricePerLiter,totalPrice,mileage
+VEHICLE_ID,gasoline,imported,42.3,1.5,63.45,12345
+```
+
+**Body (JSON)**
+```json
+{
+  "csv": "vehicleId,fuelType,note,liters,pricePerLiter,totalPrice,mileage\nVEHICLE_ID,gasoline,imported,42.3,1.5,63.45,12345"
+}
+```
+
+#### Curl
+```bash
+curl -X POST http://localhost:3000/api/v1/refuels/import \
+  -H "Authorization: Bearer TOKEN" \
+  -H "Content-Type: text/csv" \
+  --data-binary @refuels.csv
+```
+
+
 ### GET /api/v1/services
 List service records.
 
@@ -505,4 +539,38 @@ fetch(`http://localhost:3000/api/v1/services/${id}`, {
   headers: { Authorization: 'Bearer TOKEN' }
 });
 ```
+
+### GET /api/v1/services/export
+Export service records as a CSV file. Optional `vehicleId` query parameter filters records by vehicle.
+
+#### Curl
+```bash
+curl http://localhost:3000/api/v1/services/export?vehicleId=VEHICLE_ID \
+  -H "Authorization: Bearer TOKEN"
+```
+
+### POST /api/v1/services/import
+Import service records from CSV. Optional `vehicleId` query parameter acts as the fallback vehicle if row-level `vehicleId` is omitted. Accepts raw CSV text body or JSON body with a `csv` property.
+
+**Body (Raw CSV)**
+```csv
+vehicleId,serviceType,customType,itemName,cost,mileage,shop,selfService,note,date
+VEHICLE_ID,oil_change,,filter,100,1000,Garage,true,,2026-07-12T16:23:59.000Z
+```
+
+**Body (JSON)**
+```json
+{
+  "csv": "vehicleId,serviceType,customType,itemName,cost,mileage,shop,selfService,note,date\nVEHICLE_ID,oil_change,,filter,100,1000,Garage,true,,2026-07-12T16:23:59.000Z"
+}
+```
+
+#### Curl
+```bash
+curl -X POST http://localhost:3000/api/v1/services/import \
+  -H "Authorization: Bearer TOKEN" \
+  -H "Content-Type: text/csv" \
+  --data-binary @services.csv
+```
+
 
