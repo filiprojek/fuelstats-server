@@ -212,6 +212,7 @@ class ServiceRecordService {
 				shop: r.shop || "",
 				selfService: r.selfService ? "true" : "false",
 				note: r.note || "",
+				photos: r.photos ? r.photos.join(";") : "",
 				date: r.date.toISOString(),
 				createdAt: r.createdAt.toISOString(),
 			}));
@@ -255,6 +256,7 @@ class ServiceRecordService {
 
 				const selfService = row.selfService === "true" || row.selfService === "1";
 
+				const photos = row.photos ? row.photos.split(";").map((p) => p.trim()).filter((p) => p) : [];
 				const record = new ServiceRecord({
 					userId,
 					vehicleId: rowVehicleId,
@@ -266,6 +268,7 @@ class ServiceRecordService {
 					shop: row.shop || undefined,
 					selfService,
 					note: row.note || undefined,
+					photos,
 					date: new Date(row.date),
 					createdAt: row.createdAt ? new Date(row.createdAt) : undefined,
 				} as Partial<IServiceRecord>);
@@ -284,6 +287,7 @@ class ServiceRecordService {
 					shop: record.shop,
 					selfService: record.selfService,
 					note: record.note,
+					photos: record.photos?.map((p) => `/uploads/${p}`),
 					date: record.date,
 					createdAt: record.createdAt,
 				});
