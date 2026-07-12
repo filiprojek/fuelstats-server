@@ -29,6 +29,7 @@ describe("RefuelController – POST /api/v1/refuels", () => {
 		pricePerLiter: createDto.pricePerLiter,
 		totalPrice: createDto.totalPrice,
 		mileage: createDto.mileage,
+		date: new Date().toISOString(),
 		createdAt: new Date().toISOString(),
 	};
 
@@ -93,7 +94,7 @@ describe("RefuelController – POST /api/v1/refuels", () => {
 			pricePerLiter: createDto.pricePerLiter,
 			totalPrice: createDto.totalPrice,
 			mileage: createDto.mileage,
-			createdAt: new Date(customDate),
+			date: new Date(customDate),
 		});
 		expect(res.status).toBe(201);
 	});
@@ -115,6 +116,7 @@ describe("RefuelController – PUT /api/v1/refuels/:id", () => {
 		pricePerLiter: 1.2,
 		totalPrice: 24,
 		mileage: 1100,
+		date: new Date().toISOString(),
 		createdAt: new Date().toISOString(),
 	};
 
@@ -136,6 +138,22 @@ describe("RefuelController – PUT /api/v1/refuels/:id", () => {
 		expect(spy).toHaveBeenCalledWith(refuelId, userId, updatePayload);
 		expect(res.status).toBe(200);
 		expect(res.body).toEqual(returned);
+	});
+
+	it("calls RefuelService.update with mapped date parameter if provided in req.body", async () => {
+		const spy = jest.spyOn(RefuelService, "update").mockResolvedValue(returned as any);
+		const customDate = "2024-01-01T12:00:00.000Z";
+
+		const res = await request(app).put(`/api/v1/refuels/${refuelId}`).set("Authorization", `Bearer ${token}`).send({
+			...updatePayload,
+			date: customDate,
+		});
+
+		expect(spy).toHaveBeenCalledWith(refuelId, userId, {
+			...updatePayload,
+			date: new Date(customDate),
+		});
+		expect(res.status).toBe(200);
 	});
 
 	it("returns 404 when RefuelService.update throws 'Refuel not found'", async () => {
@@ -163,6 +181,7 @@ describe("RefuelController – GET /api/v1/refuels", () => {
 			pricePerLiter: 1.2,
 			totalPrice: 12,
 			mileage: 1000,
+			date: new Date().toISOString(),
 			createdAt: new Date().toISOString(),
 		},
 	];
@@ -200,6 +219,7 @@ describe("RefuelController – GET /api/v1/refuels/:id", () => {
 		pricePerLiter: 1.2,
 		totalPrice: 12,
 		mileage: 1000,
+		date: new Date().toISOString(),
 		createdAt: new Date().toISOString(),
 	};
 

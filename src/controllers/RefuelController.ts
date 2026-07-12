@@ -15,7 +15,7 @@ class RefuelController {
 				pricePerLiter: req.body.pricePerLiter,
 				totalPrice: req.body.totalPrice,
 				mileage: req.body.mileage,
-				createdAt: req.body.date ? new Date(req.body.date) : undefined,
+				date: req.body.date ? new Date(req.body.date) : undefined,
 			};
 			const refuel = await RefuelService.create(dto);
 			new Succ(201, "Refuel created", refuel);
@@ -67,6 +67,7 @@ class RefuelController {
 				pricePerLiter: req.body.pricePerLiter,
 				totalPrice: req.body.totalPrice,
 				mileage: req.body.mileage,
+				date: req.body.date ? new Date(req.body.date) : undefined,
 			};
 			const refuel = await RefuelService.update(id, userId, payload);
 			new Succ(200, "Refuel updated", refuel);

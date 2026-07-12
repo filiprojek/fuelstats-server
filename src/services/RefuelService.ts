@@ -11,7 +11,7 @@ export interface CreateRefuelDTO {
 	pricePerLiter: number;
 	totalPrice: number;
 	mileage: number;
-	createdAt?: Date;
+	date?: Date;
 }
 
 export interface RefuelPayload {
@@ -24,6 +24,7 @@ export interface RefuelPayload {
 	pricePerLiter: number;
 	totalPrice: number;
 	mileage: number;
+	date: Date;
 	createdAt: Date;
 }
 
@@ -39,7 +40,7 @@ class RefuelService {
 				pricePerLiter: data.pricePerLiter,
 				totalPrice: data.totalPrice,
 				mileage: data.mileage,
-				createdAt: data.createdAt ? new Date(data.createdAt) : undefined,
+				date: data.date ? new Date(data.date) : new Date(),
 			} as Partial<IRefuel>);
 
 			await refuel.save();
@@ -54,6 +55,7 @@ class RefuelService {
 				pricePerLiter: refuel.pricePerLiter,
 				totalPrice: refuel.totalPrice,
 				mileage: refuel.mileage,
+				date: refuel.date || refuel.createdAt,
 				createdAt: refuel.createdAt,
 			};
 
@@ -83,6 +85,7 @@ class RefuelService {
 				pricePerLiter: refuel.pricePerLiter,
 				totalPrice: refuel.totalPrice,
 				mileage: refuel.mileage,
+				date: refuel.date || refuel.createdAt,
 				createdAt: refuel.createdAt,
 			};
 
@@ -107,6 +110,7 @@ class RefuelService {
 				pricePerLiter: r.pricePerLiter,
 				totalPrice: r.totalPrice,
 				mileage: r.mileage,
+				date: r.date || r.createdAt,
 				createdAt: r.createdAt,
 			}));
 			new Succ(200, "Fetched refuels", payload);
@@ -120,7 +124,7 @@ class RefuelService {
 	static async update(
 		id: string,
 		userId: string,
-		payload: Partial<Pick<IRefuel, "vehicleId" | "fuelType" | "note" | "liters" | "pricePerLiter" | "totalPrice" | "mileage">>,
+		payload: Partial<Pick<IRefuel, "vehicleId" | "fuelType" | "note" | "liters" | "pricePerLiter" | "totalPrice" | "mileage" | "date">>,
 	): Promise<RefuelPayload> {
 		try {
 			const updated = await Refuel.findOneAndUpdate({ _id: id, userId }, payload, { new: true });
@@ -138,6 +142,7 @@ class RefuelService {
 				pricePerLiter: updated.pricePerLiter,
 				totalPrice: updated.totalPrice,
 				mileage: updated.mileage,
+				date: updated.date || updated.createdAt,
 				createdAt: updated.createdAt,
 			};
 			new Succ(200, "Refuel updated", result);
@@ -184,6 +189,7 @@ class RefuelService {
 				pricePerLiter: r.pricePerLiter,
 				totalPrice: r.totalPrice,
 				mileage: r.mileage,
+				date: r.date ? r.date.toISOString() : r.createdAt.toISOString(),
 				createdAt: r.createdAt.toISOString(),
 			}));
 			return toCSV(rows);
@@ -236,6 +242,7 @@ class RefuelService {
 					pricePerLiter: Number(row.pricePerLiter),
 					totalPrice: Number(row.totalPrice),
 					mileage: Number(row.mileage),
+					date: row.date ? new Date(row.date) : (row.createdAt ? new Date(row.createdAt) : undefined),
 					createdAt: row.createdAt ? new Date(row.createdAt) : undefined,
 				} as Partial<IRefuel>);
 
@@ -251,6 +258,7 @@ class RefuelService {
 					pricePerLiter: refuel.pricePerLiter,
 					totalPrice: refuel.totalPrice,
 					mileage: refuel.mileage,
+					date: refuel.date || refuel.createdAt,
 					createdAt: refuel.createdAt,
 				});
 			}

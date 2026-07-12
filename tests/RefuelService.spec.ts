@@ -42,19 +42,20 @@ describe("RefuelService", () => {
 			});
 		});
 
-		it("should save a refuel with a custom createdAt date if provided", async () => {
+		it("should save a refuel with a custom date if provided", async () => {
 			const customDate = new Date("2024-01-01T12:00:00.000Z");
 			const saveSpy = jest.spyOn(Refuel.prototype, "save").mockImplementation(function (this: any) {
+				this.date = customDate;
 				return Promise.resolve(this);
 			});
 
 			const result = await RefuelService.create({
 				...dto,
-				createdAt: customDate,
+				date: customDate,
 			});
 
 			expect(saveSpy).toHaveBeenCalled();
-			expect(result.createdAt).toEqual(customDate);
+			expect(result.date).toEqual(customDate);
 		});
 
 		it("should throw if save fails", async () => {
@@ -79,6 +80,7 @@ describe("RefuelService", () => {
 				pricePerLiter: dto.pricePerLiter,
 				totalPrice: dto.totalPrice,
 				mileage: dto.mileage,
+				date: now,
 				createdAt: now,
 			};
 			const spy = jest.spyOn(Refuel, "findOne").mockResolvedValue(found as any);
@@ -103,6 +105,7 @@ describe("RefuelService", () => {
 
 	describe("list()", () => {
 		it("returns refuels for user", async () => {
+			const now = new Date();
 			const docs = [
 				{
 					id: "r1",
@@ -114,7 +117,8 @@ describe("RefuelService", () => {
 					pricePerLiter: dto.pricePerLiter,
 					totalPrice: dto.totalPrice,
 					mileage: dto.mileage,
-					createdAt: new Date(),
+					date: now,
+					createdAt: now,
 				},
 			];
 			const spy = jest.spyOn(Refuel, "find").mockResolvedValue(docs as any);
@@ -147,11 +151,33 @@ describe("RefuelService", () => {
 				pricePerLiter: dto.pricePerLiter,
 				totalPrice: dto.totalPrice,
 				mileage: dto.mileage,
+				date: now,
 				createdAt: now,
 			};
 			const spy = jest.spyOn(Refuel, "findOneAndUpdate").mockResolvedValue(updated as any);
 			const result = await RefuelService.update(id, userId, updatePayload);
 			expect(spy).toHaveBeenCalledWith({ _id: id, userId }, updatePayload, { new: true });
+			expect(result).toEqual(updated);
+		});
+
+		it("updates and returns payload with updated date", async () => {
+			const customDate = new Date("2024-01-01T12:00:00.000Z");
+			const updated = {
+				id,
+				userId,
+				vehicleId: dto.vehicleId,
+				fuelType: dto.fuelType,
+				note: dto.note,
+				liters: dto.liters,
+				pricePerLiter: dto.pricePerLiter,
+				totalPrice: dto.totalPrice,
+				mileage: dto.mileage,
+				date: customDate,
+				createdAt: new Date(),
+			};
+			const spy = jest.spyOn(Refuel, "findOneAndUpdate").mockResolvedValue(updated as any);
+			const result = await RefuelService.update(id, userId, { date: customDate });
+			expect(spy).toHaveBeenCalledWith({ _id: id, userId }, { date: customDate }, { new: true });
 			expect(result).toEqual(updated);
 		});
 

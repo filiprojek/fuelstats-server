@@ -9,6 +9,7 @@ export interface IRefuel extends Document {
 	pricePerLiter: number;
 	totalPrice: number;
 	mileage: number;
+	date?: Date;
 	createdAt: Date;
 }
 
@@ -46,6 +47,9 @@ const refuelSchema = new Schema<IRefuel>(
 		mileage: {
 			type: Number,
 			required: true,
+		},
+		date: {
+			type: Date,
 		},
 	},
 	{
