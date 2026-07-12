@@ -191,7 +191,14 @@ class VehicleService {
 				throw new Error("Vehicle not found");
 			}
 
-			new Succ(200, "Vehicle removed", { id });
+			// Cascade delete associated refuels and service records
+			const Refuel = require("../models/Refuel").default;
+			await Refuel.deleteMany({ vehicleId: id, userId });
+
+			const ServiceRecord = require("../models/ServiceRecord").default;
+			await ServiceRecord.deleteMany({ vehicleId: id, userId });
+
+			new Succ(200, "Vehicle removed and associated records deleted", { id });
 		} catch (err: any) {
 			if (err.message === "Vehicle not found") {
 				// Already logged above
