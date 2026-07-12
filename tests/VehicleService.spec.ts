@@ -160,9 +160,16 @@ describe("VehicleService", () => {
 		it("should delete the vehicle belonging to the user", async () => {
 			const spy = jest.spyOn(Vehicle, "findOneAndDelete").mockResolvedValue({ id } as any);
 
+			const Refuel = require("../src/models/Refuel").default;
+			const ServiceRecord = require("../src/models/ServiceRecord").default;
+			const refuelSpy = jest.spyOn(Refuel, "deleteMany").mockResolvedValue({} as any);
+			const serviceSpy = jest.spyOn(ServiceRecord, "deleteMany").mockResolvedValue({} as any);
+
 			await VehicleService.remove(id, userId);
 
 			expect(spy).toHaveBeenCalledWith({ _id: id, userId });
+			expect(refuelSpy).toHaveBeenCalledWith({ vehicleId: id, userId });
+			expect(serviceSpy).toHaveBeenCalledWith({ vehicleId: id, userId });
 		});
 
 		it("should throw if vehicle not found", async () => {
