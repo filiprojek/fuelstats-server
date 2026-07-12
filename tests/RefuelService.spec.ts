@@ -42,6 +42,21 @@ describe("RefuelService", () => {
 			});
 		});
 
+		it("should save a refuel with a custom createdAt date if provided", async () => {
+			const customDate = new Date("2024-01-01T12:00:00.000Z");
+			const saveSpy = jest.spyOn(Refuel.prototype, "save").mockImplementation(function (this: any) {
+				return Promise.resolve(this);
+			});
+
+			const result = await RefuelService.create({
+				...dto,
+				createdAt: customDate,
+			});
+
+			expect(saveSpy).toHaveBeenCalled();
+			expect(result.createdAt).toEqual(customDate);
+		});
+
 		it("should throw if save fails", async () => {
 			const dbError = new Error("DB failure");
 			jest.spyOn(Refuel.prototype, "save").mockRejectedValue(dbError);

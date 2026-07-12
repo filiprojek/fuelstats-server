@@ -68,6 +68,35 @@ describe("RefuelController – POST /api/v1/refuels", () => {
 		expect(res.status).toBe(201);
 		expect(res.body).toEqual(returned);
 	});
+
+	it("calls RefuelService.create with custom date if provided in req.body", async () => {
+		const spy = jest.spyOn(RefuelService, "create").mockResolvedValue(returned as any);
+		const customDate = "2024-01-01T12:00:00.000Z";
+
+		const res = await request(app).post("/api/v1/refuels").set("Authorization", `Bearer ${token}`).send({
+			vehicleId: createDto.vehicleId,
+			fuelType: createDto.fuelType,
+			note: createDto.note,
+			liters: createDto.liters,
+			pricePerLiter: createDto.pricePerLiter,
+			totalPrice: createDto.totalPrice,
+			mileage: createDto.mileage,
+			date: customDate,
+		});
+
+		expect(spy).toHaveBeenCalledWith({
+			userId,
+			vehicleId: createDto.vehicleId,
+			fuelType: createDto.fuelType,
+			note: createDto.note,
+			liters: createDto.liters,
+			pricePerLiter: createDto.pricePerLiter,
+			totalPrice: createDto.totalPrice,
+			mileage: createDto.mileage,
+			createdAt: new Date(customDate),
+		});
+		expect(res.status).toBe(201);
+	});
 });
 
 describe("RefuelController – PUT /api/v1/refuels/:id", () => {

@@ -11,6 +11,7 @@ export interface CreateRefuelDTO {
 	pricePerLiter: number;
 	totalPrice: number;
 	mileage: number;
+	createdAt?: Date;
 }
 
 export interface RefuelPayload {
@@ -38,6 +39,7 @@ class RefuelService {
 				pricePerLiter: data.pricePerLiter,
 				totalPrice: data.totalPrice,
 				mileage: data.mileage,
+				createdAt: data.createdAt ? new Date(data.createdAt) : undefined,
 			} as Partial<IRefuel>);
 
 			await refuel.save();
