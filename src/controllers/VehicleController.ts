@@ -13,6 +13,7 @@ class VehicleController {
 				name: req.body.name,
 				registrationPlate: req.body.registrationPlate,
 				fuelType: req.body.fuelType,
+				vin: req.body.vin,
 				note: req.body.note,
 				isDefault: req.body.isDefault,
 			};
@@ -66,6 +67,7 @@ class VehicleController {
 				name: req.body.name,
 				registrationPlate: req.body.registrationPlate,
 				fuelType: req.body.fuelType,
+				vin: req.body.vin,
 				note: req.body.note,
 				isDefault: req.body.isDefault,
 			};

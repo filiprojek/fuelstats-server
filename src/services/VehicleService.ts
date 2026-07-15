@@ -7,6 +7,7 @@ export interface CreateVehicleDTO {
 	name: string;
 	registrationPlate: string;
 	fuelType: string;
+	vin?: string;
 	note?: string;
 	isDefault?: boolean;
 }
@@ -18,6 +19,7 @@ export interface VehiclePayload {
 	name: string;
 	registrationPlate: string;
 	fuelType: string;
+	vin?: string;
 	note?: string;
 	isDefault: boolean;
 	createdAt: Date;
@@ -35,6 +37,7 @@ class VehicleService {
 				name: data.name,
 				registrationPlate: data.registrationPlate,
 				fuelType: data.fuelType,
+				vin: data.vin,
 				note: data.note,
 				isDefault: data.isDefault ?? false,
 			} as Partial<IVehicle>);
@@ -49,6 +52,7 @@ class VehicleService {
 				name: vehicle.name,
 				registrationPlate: vehicle.registrationPlate,
 				fuelType: vehicle.fuelType,
+				vin: vehicle.vin,
 				note: vehicle.note,
 				isDefault: vehicle.isDefault,
 				createdAt: vehicle.createdAt,
@@ -65,7 +69,7 @@ class VehicleService {
 	}
 
 	/** DTO for updating a vehicle */
-	static async update(id: string, userId: string, payload: Partial<Pick<IVehicle, "name" | "registrationPlate" | "fuelType" | "note" | "isDefault">>): Promise<VehiclePayload> {
+	static async update(id: string, userId: string, payload: Partial<Pick<IVehicle, "name" | "registrationPlate" | "fuelType" | "vin" | "note" | "isDefault">>): Promise<VehiclePayload> {
 		try {
 			const updated = await Vehicle.findOneAndUpdate({ _id: id, userId }, payload, { new: true });
 
@@ -80,6 +84,7 @@ class VehicleService {
 				name: updated.name,
 				registrationPlate: updated.registrationPlate,
 				fuelType: updated.fuelType,
+				vin: updated.vin,
 				note: updated.note,
 				isDefault: updated.isDefault,
 				createdAt: updated.createdAt,
@@ -108,6 +113,7 @@ class VehicleService {
 				name: v.name,
 				registrationPlate: v.registrationPlate,
 				fuelType: v.fuelType,
+				vin: v.vin,
 				note: v.note,
 				isDefault: v.isDefault,
 				createdAt: v.createdAt,
@@ -138,6 +144,7 @@ class VehicleService {
 				name: vehicle.name,
 				registrationPlate: vehicle.registrationPlate,
 				fuelType: vehicle.fuelType,
+				vin: vehicle.vin,
 				note: vehicle.note,
 				isDefault: vehicle.isDefault,
 				createdAt: vehicle.createdAt,
@@ -166,6 +173,7 @@ class VehicleService {
 				name: vehicle.name,
 				registrationPlate: vehicle.registrationPlate,
 				fuelType: vehicle.fuelType,
+				vin: vehicle.vin,
 				note: vehicle.note,
 				isDefault: vehicle.isDefault,
 				createdAt: vehicle.createdAt,

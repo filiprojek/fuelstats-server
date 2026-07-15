@@ -5,6 +5,7 @@ export interface IVehicle extends Document {
 	name: string;
 	registrationPlate: string;
 	fuelType: string;
+	vin?: string;
 	note?: string;
 	isDefault: boolean;
 	createdAt: Date;
@@ -28,6 +29,9 @@ const vehicleSchema = new Schema<IVehicle>(
 		fuelType: {
 			type: String,
 			required: true,
+		},
+		vin: {
+			type: String,
 		},
 		note: {
 			type: String,
