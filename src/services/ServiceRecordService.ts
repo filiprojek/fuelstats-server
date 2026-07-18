@@ -1,6 +1,79 @@
 import ServiceRecord, { IServiceRecord } from "../models/ServiceRecord";
+import ServiceTask from "../models/ServiceTask";
+import ServiceLog from "../models/ServiceLog";
 import { Err, Succ } from "./globalService";
 import { toCSV, parseCSV } from "../utils/csv";
+
+async function syncServiceLog(record: any) {
+	try {
+		let mappedName = record.serviceType;
+		const lowerType = String(record.serviceType).toLowerCase();
+		if (lowerType === "engine-oil" || lowerType === "oil") {
+			mappedName = "Výměna motorového oleje a filtru";
+		} else if (lowerType === "brake-fluid" || lowerType === "brakes" || lowerType === "brake-pads-front" || lowerType === "brake-pads-rear" || lowerType === "brake-discs-front" || lowerType === "brake-discs-rear") {
+			mappedName = "Brzdová kapalina";
+		} else if (lowerType === "cabin-filter") {
+			mappedName = "Výměna kabinového (mikro)filtru";
+		} else if (lowerType === "air-filter") {
+			mappedName = "Použití vzduch. Filtru";
+		} else if (lowerType === "fuel-filter") {
+			mappedName = "Palivový filtr";
+		} else if (lowerType === "vehicle-inspection" || lowerType === "repair") {
+			mappedName = "Kontrola vozidla";
+		}
+
+		// Find or create ServiceTask
+		let task = await ServiceTask.findOne({ name: { $regex: new RegExp(`^${mappedName}$`, "i") } });
+		if (!task) {
+			task = new ServiceTask({ name: mappedName });
+			await task.save();
+		}
+
+		// Update or create ServiceLog
+		await ServiceLog.findOneAndUpdate(
+			{ serviceRecordId: record.id },
+			{
+				userId: record.userId,
+				carId: record.vehicleId,
+				serviceTaskId: task.id,
+				date: record.date,
+				odometer: record.mileage,
+				price: record.cost,
+				note: record.note || "",
+			},
+			{ upsert: true, new: true }
+		);
+	} catch (err) {
+		console.error("Failed to sync service log:", err);
+	}
+}
+
+async function deleteServiceLog(recordId: string) {
+	try {
+		await ServiceLog.deleteOne({ serviceRecordId: recordId });
+	} catch (err) {
+		console.error("Failed to delete service log:", err);
+	}
+}
+
+function parseFlexibleDate(dateStr: string): Date {
+	dateStr = dateStr.trim();
+	const dmyRegex = /^(\d{1,2})\.(\d{1,2})\.(\d{4})$/;
+	const match = dateStr.match(dmyRegex);
+	if (match) {
+		const day = parseInt(match[1], 10);
+		const month = parseInt(match[2], 10) - 1;
+		const year = parseInt(match[3], 10);
+		return new Date(Date.UTC(year, month, day));
+	}
+	const d = new Date(dateStr);
+	if (isNaN(d.getTime())) {
+		throw new Error(`Invalid date format: ${dateStr}`);
+	}
+	return d;
+}
+
+
 
 export interface CreateServiceRecordDTO {
 	userId: string;
@@ -53,6 +126,7 @@ class ServiceRecordService {
 			} as Partial<IServiceRecord>);
 
 			await record.save();
+			await syncServiceLog(record);
 
 			const payload: ServiceRecordPayload = {
 				id: record.id,
@@ -150,6 +224,7 @@ class ServiceRecordService {
 				new Err(404, "Service record not found");
 				throw new Error("Service record not found");
 			}
+			await syncServiceLog(updated);
 			const result: ServiceRecordPayload = {
 				id: updated.id,
 				userId: updated.userId,
@@ -179,6 +254,7 @@ class ServiceRecordService {
 
 	static async remove(id: string, userId: string): Promise<void> {
 		try {
+			await deleteServiceLog(id);
 			const deleted = await ServiceRecord.findOneAndDelete({ _id: id, userId });
 			if (!deleted) {
 				new Err(404, "Service record not found or not owned by user", { id, userId });
@@ -241,39 +317,55 @@ class ServiceRecordService {
 					throw new Error(`Vehicle with ID ${rowVehicleId} not found or not owned by user`);
 				}
 
-				if (!row.serviceType) {
-					throw new Error("Missing serviceType in CSV row");
+				// Dynamic property mapping for English and Czech headers
+				const rowServiceType = row.serviceType || row["servisní úkon"] || row["Servisní úkon"];
+				const rowCost = row.cost || row.price || row.Cena || row.cena;
+				const rowMileage = row.mileage || row.odometer || row["stav tachometru"] || row["Stav tachometru"];
+				const rowDate = row.date || row.datum || row.Datum;
+				const rowNote = row.note || row.Poznámka || row.poznámka;
+				const rowShop = row.shop || row.provider || row["kód servisu/poskytovatel"] || row["Kód servisu/poskytovatel"];
+
+				if (!rowServiceType) {
+					throw new Error("Missing serviceType/servisní úkon in CSV row");
 				}
-				if (!row.cost || isNaN(Number(row.cost))) {
-					throw new Error("Invalid or missing cost in CSV row");
+				if (!rowMileage || isNaN(Number(rowMileage))) {
+					throw new Error("Invalid or missing mileage/stav tachometru in CSV row");
 				}
-				if (!row.mileage || isNaN(Number(row.mileage))) {
-					throw new Error("Invalid or missing mileage in CSV row");
-				}
-				if (!row.date) {
-					throw new Error("Missing date in CSV row");
+				if (!rowDate) {
+					throw new Error("Missing date/datum in CSV row");
 				}
 
+				// Parse cost, default to 0 if empty
+				let costVal = 0;
+				if (rowCost !== "" && rowCost !== undefined && rowCost !== null) {
+					costVal = Number(rowCost);
+					if (isNaN(costVal)) {
+						throw new Error(`Invalid cost/Cena value: ${rowCost}`);
+					}
+				}
+
+				const parsedDate = parseFlexibleDate(rowDate);
 				const selfService = row.selfService === "true" || row.selfService === "1";
-
 				const photos = row.photos ? row.photos.split(";").map((p) => p.trim()).filter((p) => p) : [];
+
 				const record = new ServiceRecord({
 					userId,
 					vehicleId: rowVehicleId,
-					serviceType: row.serviceType,
+					serviceType: rowServiceType,
 					customType: row.customType || undefined,
 					itemName: row.itemName || undefined,
-					cost: Number(row.cost),
-					mileage: Number(row.mileage),
-					shop: row.shop || undefined,
+					cost: costVal,
+					mileage: Number(rowMileage),
+					shop: rowShop || undefined,
 					selfService,
-					note: row.note || undefined,
+					note: rowNote || undefined,
 					photos,
-					date: new Date(row.date),
+					date: parsedDate,
 					createdAt: row.createdAt ? new Date(row.createdAt) : undefined,
 				} as Partial<IServiceRecord>);
 
 				await record.save();
+				await syncServiceLog(record);
 
 				importedPayloads.push({
 					id: record.id,
