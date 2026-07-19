@@ -13,7 +13,7 @@ if [ -n "$TARGET_VERSION" ]; then
   echo "🔢 Bumping version to $TARGET_VERSION..."
   npm version "$TARGET_VERSION" --no-git-tag-version
   NEW_VER=$(node -p "require('./package.json').version")
-  git add package.json
+  git add package*.json
   git commit -m "chore(release): bump version to $NEW_VER" || true
 fi
 
