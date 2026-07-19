@@ -1,6 +1,9 @@
 import ServiceRecordService, { CreateServiceRecordDTO } from "../src/services/ServiceRecordService";
 import ServiceRecord from "../src/models/ServiceRecord";
 
+import ServiceTask from "../src/models/ServiceTask";
+import ServiceLog from "../src/models/ServiceLog";
+
 describe("ServiceRecordService", () => {
 	const photoName = "img.jpg";
 	const photoUrl = `/uploads/${photoName}`;
@@ -17,6 +20,16 @@ describe("ServiceRecordService", () => {
 		note: "Changed oil filter",
 		photos: [photoName],
 	};
+
+	beforeEach(() => {
+		jest.spyOn(ServiceTask, "findOne").mockResolvedValue({ id: "task1", name: "Oil Change" } as any);
+		jest.spyOn(ServiceTask.prototype, "save").mockImplementation(function (this: any) {
+			this.id = "task1";
+			return Promise.resolve(this);
+		});
+		jest.spyOn(ServiceLog, "findOneAndUpdate").mockResolvedValue({ id: "log1" } as any);
+		jest.spyOn(ServiceLog, "deleteOne").mockResolvedValue({ acknowledged: true, deletedCount: 1 } as any);
+	});
 
 	afterEach(() => {
 		jest.restoreAllMocks();
