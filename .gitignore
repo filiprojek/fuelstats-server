@@ -7,3 +7,9 @@ src/logs/**
 !src/logs/.gitkeep
 *.swp
 fuelstats-logs/
+
+# Ignore frontend static builds in src/public
+src/public/*
+!src/public/expressjs.png
+!src/public/nodejs_logo.svg
+!src/public/uploads
