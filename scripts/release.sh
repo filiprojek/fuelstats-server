@@ -2,6 +2,20 @@
 set -e
 
 # FuelStats Server Release Script
+# Usage:
+#   npm run release             # Releases current package.json version
+#   npm run release -- 1.1.0    # Bumps version to 1.1.0 and releases
+#   npm run release -- minor    # Bumps minor version and releases
+
+TARGET_VERSION="$1"
+
+if [ -n "$TARGET_VERSION" ]; then
+  echo "🔢 Bumping version to $TARGET_VERSION..."
+  npm version "$TARGET_VERSION" --no-git-tag-version
+  NEW_VER=$(node -p "require('./package.json').version")
+  git add package.json
+  git commit -m "chore(release): bump version to $NEW_VER" || true
+fi
 
 VERSION=$(node -p "require('./package.json').version")
 
