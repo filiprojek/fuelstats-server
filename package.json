@@ -1,6 +1,6 @@
 {
 	"name": "fuelstats-server",
-	"version": "1.0.0",
+	"version": "1.1.0",
 	"description": "",
 	"main": "dist/server.js",
 	"private": "true",
@@ -66,8 +66,15 @@
 		"testEnvironment": "node"
 	},
 	"nodemonConfig": {
-		"ignore": ["**/*.test.ts", "**/*.spec.ts", ".git", "node_modules"],
-		"watch": ["src"],
+		"ignore": [
+			"**/*.test.ts",
+			"**/*.spec.ts",
+			".git",
+			"node_modules"
+		],
+		"watch": [
+			"src"
+		],
 		"ext": "ts, js"
 	}
 }
