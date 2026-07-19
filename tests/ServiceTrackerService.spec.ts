@@ -5,6 +5,7 @@ import ServiceLog from "../src/models/ServiceLog";
 import ServiceRecord from "../src/models/ServiceRecord";
 import Vehicle from "../src/models/Vehicle";
 import Refuel from "../src/models/Refuel";
+import OdometerRecord from "../src/models/OdometerRecord";
 import mongoose from "mongoose";
 
 describe("ServiceTrackerService", () => {
@@ -58,6 +59,9 @@ describe("ServiceTrackerService", () => {
 		jest.spyOn(ServiceRecord, "find").mockResolvedValue([]);
 		jest.spyOn(ServiceRecord, "findOne").mockImplementation(() => makeQuery(null) as any);
 		jest.spyOn(ServiceRecord, "deleteMany").mockResolvedValue({ acknowledged: true } as any);
+
+		jest.spyOn(OdometerRecord, "find").mockResolvedValue([]);
+		jest.spyOn(OdometerRecord, "findOne").mockImplementation(() => makeQuery(null) as any);
 
 		jest.spyOn(Vehicle, "findById").mockResolvedValue(mockVehicleInstance as any);
 		jest.spyOn(Vehicle, "findOne").mockResolvedValue(mockVehicleInstance as any);

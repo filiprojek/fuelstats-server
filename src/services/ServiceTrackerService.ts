@@ -3,6 +3,7 @@ import ServiceInterval from "../models/ServiceInterval";
 import ServiceLog from "../models/ServiceLog";
 import ServiceRecord from "../models/ServiceRecord";
 import Refuel from "../models/Refuel";
+import OdometerRecord from "../models/OdometerRecord";
 import Vehicle from "../models/Vehicle";
 import { Err, Succ } from "./globalService";
 
@@ -86,19 +87,21 @@ class ServiceTrackerService {
 
 	/**
 	 * Get the latest known odometer reading (mileage) for a vehicle.
-	 * Max of all refuels, service logs, and service records.
+	 * Max of all refuels, service logs, service records, and odometer records.
 	 */
 	static async getLatestOdometer(vehicleId: string): Promise<number> {
 		try {
 			const latestRefuel = await Refuel.findOne({ vehicleId }).sort({ mileage: -1 }).select("mileage");
 			const latestServiceLog = await ServiceLog.findOne({ carId: vehicleId }).sort({ odometer: -1 }).select("odometer");
 			const latestServiceRecord = await ServiceRecord.findOne({ vehicleId }).sort({ mileage: -1 }).select("mileage");
+			const latestOdometerRecord = await OdometerRecord.findOne({ vehicleId }).sort({ mileage: -1 }).select("mileage");
 
 			const refuelKm = latestRefuel ? latestRefuel.mileage : 0;
 			const serviceLogKm = latestServiceLog ? latestServiceLog.odometer : 0;
 			const serviceRecordKm = latestServiceRecord ? latestServiceRecord.mileage : 0;
+			const odometerRecordKm = latestOdometerRecord ? latestOdometerRecord.mileage : 0;
 
-			return Math.max(refuelKm, serviceLogKm, serviceRecordKm, 0);
+			return Math.max(refuelKm, serviceLogKm, serviceRecordKm, odometerRecordKm, 0);
 		} catch (err: any) {
 			new Err(500, "Failed to retrieve latest odometer", err);
 			return 0;
