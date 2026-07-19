@@ -2,6 +2,16 @@
 
 All notable changes to the `fuelstats-server` backend application will be documented in this file.
 
+## [1.1.0] - 2026-07-19
+
+### Features & Updates
+* **Standalone Odometer API**: Added `OdometerRecord` model and CRUD endpoints (`/api/v1/odometer`) for logging vehicle mileage entries.
+* **Service Tracker Odometer Aggregation**: Integrated `OdometerRecord` into `ServiceTrackerService.getLatestOdometer` logic to dynamically recalculate maintenance intervals.
+* **Server Version Endpoint**: Added `GET /api/v1/version` endpoint returning server metadata `{ name, version: "1.1.0", apiVersion: "v1" }`.
+* **Automated Release Script**: Added `npm run release` script supporting SemVer minor/patch version arguments.
+
+---
+
 ## [1.0.0] - 2026-07-19
 
 ### Features & Updates
