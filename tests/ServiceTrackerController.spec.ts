@@ -35,6 +35,27 @@ describe("ServiceTrackerController", () => {
 		});
 	});
 
+	describe("POST /api/v1/vehicles/service-tasks", () => {
+		it("returns 401 if unauthenticated", async () => {
+			const res = await request(app).post("/api/v1/vehicles/service-tasks").send({ name: "Custom Service" });
+			expect(res.status).toBe(401);
+		});
+
+		it("returns 201 with created task", async () => {
+			const mockTask = { id: "custom_1", name: "Custom Service" };
+			const spy = jest.spyOn(ServiceTrackerService, "getOrCreateServiceTask").mockResolvedValue(mockTask as any);
+
+			const res = await request(app)
+				.post("/api/v1/vehicles/service-tasks")
+				.set("Authorization", `Bearer ${token}`)
+				.send({ name: "Custom Service" });
+
+			expect(res.status).toBe(201);
+			expect(spy).toHaveBeenCalledWith("Custom Service");
+			expect(res.body).toEqual(mockTask);
+		});
+	});
+
 	describe("GET /api/v1/vehicles/:carId/service-intervals", () => {
 		it("returns 401 if unauthenticated", async () => {
 			const res = await request(app).get(`/api/v1/vehicles/${carId}/service-intervals`);

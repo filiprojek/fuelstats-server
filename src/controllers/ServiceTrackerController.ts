@@ -19,6 +19,25 @@ class ServiceTrackerController {
 	}
 
 	/**
+	 * POST /api/v1/vehicles/service-tasks
+	 * Create a custom service task item in the dictionary.
+	 */
+	static async createServiceTask(req: Request, res: Response): Promise<Response> {
+		try {
+			const { name } = req.body;
+			if (!name || typeof name !== "string" || !name.trim()) {
+				return res.status(400).json({ message: "Task name is required" });
+			}
+			const task = await ServiceTrackerService.getOrCreateServiceTask(name.trim());
+			new Succ(201, "Service task created", task);
+			return res.status(201).json(task);
+		} catch (err: any) {
+			new Err(500, "Failed to create service task", err);
+			return res.status(500).json({ message: "Failed to create service task" });
+		}
+	}
+
+	/**
 	 * GET /api/v1/vehicles/:carId/service-intervals
 	 * Get service intervals configured for the specified vehicle.
 	 */

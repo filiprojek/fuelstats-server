@@ -8,7 +8,8 @@ import Vehicle from "../models/Vehicle";
 import { Err, Succ } from "./globalService";
 
 export interface ServiceIntervalDTO {
-	serviceTaskId: string;
+	serviceTaskId?: string;
+	serviceTaskName?: string;
 	intervalKm: number | null;
 	intervalMonths: number | null;
 }
@@ -154,13 +155,22 @@ class ServiceTrackerService {
 			const savedIntervals = [];
 
 			for (const item of intervals) {
+				let taskId = item.serviceTaskId;
+
+				if (!taskId && item.serviceTaskName) {
+					const task = await this.getOrCreateServiceTask(item.serviceTaskName);
+					taskId = task.id;
+				}
+
+				if (!taskId) continue;
+
 				// If both intervals are null, delete the interval record
 				if (item.intervalKm === null && item.intervalMonths === null) {
-					await ServiceInterval.findOneAndDelete({ carId, serviceTaskId: item.serviceTaskId, userId });
+					await ServiceInterval.findOneAndDelete({ carId, serviceTaskId: taskId, userId });
 					continue;
 				}
 
-				let interval = await ServiceInterval.findOne({ carId, serviceTaskId: item.serviceTaskId, userId });
+				let interval = await ServiceInterval.findOne({ carId, serviceTaskId: taskId, userId });
 				if (interval) {
 					interval.intervalKm = item.intervalKm;
 					interval.intervalMonths = item.intervalMonths;
@@ -169,7 +179,7 @@ class ServiceTrackerService {
 					interval = new ServiceInterval({
 						userId,
 						carId,
-						serviceTaskId: item.serviceTaskId,
+						serviceTaskId: taskId,
 						intervalKm: item.intervalKm,
 						intervalMonths: item.intervalMonths,
 					});

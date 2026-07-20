@@ -8,6 +8,9 @@ const router = Router();
 // GET /api/v1/vehicles/service-tasks
 router.get("/service-tasks", requireAuth, ServiceTrackerController.listServiceTasks);
 
+// POST /api/v1/vehicles/service-tasks
+router.post("/service-tasks", requireAuth, ServiceTrackerController.createServiceTask);
+
 // POST /api/v1/vehicles/seed-test-data
 router.post("/seed-test-data", requireAuth, ServiceTrackerController.seedTestData);
 
