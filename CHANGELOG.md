@@ -2,6 +2,14 @@
 
 All notable changes to the `fuelstats-server` backend application will be documented in this file.
 
+## [1.1.1] - 2026-07-20
+
+### Features & Updates
+* **Custom Service Task API**: Added support for dynamic creation and resolving of custom service tasks via `POST /api/v1/vehicles/service-tasks` and `saveServiceIntervals`.
+* **Server Version Endpoint**: Updated `GET /api/v1/version` endpoint to return version `1.1.1`.
+
+---
+
 ## [1.1.0] - 2026-07-19
 
 ### Features & Updates
