@@ -13,3 +13,4 @@ src/public/*
 !src/public/expressjs.png
 !src/public/nodejs_logo.svg
 !src/public/uploads
+coverage/

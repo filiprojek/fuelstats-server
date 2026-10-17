@@ -46,3 +46,39 @@ describe("AuthController", () => {
 		});
 	});
 });
+
+describe("AuthController cookies", () => {
+	beforeEach(() => {
+		jest.resetAllMocks();
+	});
+
+	it("sets jwt and auth cookies on successful signin", async () => {
+		(AuthService.login as jest.Mock).mockResolvedValue("tokenxyz");
+		const res = await request(app).post("/api/v1/auth/signin").send({ email: "a@b.com", password: "pass" });
+		const cookies = ([] as string[]).concat(res.headers["set-cookie"] as any);
+		expect(cookies.some((c) => c.startsWith("jwt=tokenxyz") && c.includes("HttpOnly"))).toBe(true);
+		expect(cookies.some((c) => c.startsWith("auth=true"))).toBe(true);
+	});
+
+	it("clears cookies on failed signin", async () => {
+		(AuthService.login as jest.Mock).mockRejectedValue({ status: 401, message: "Invalid credentials" });
+		const res = await request(app).post("/api/v1/auth/signin").send({ email: "a@b.com", password: "x" });
+		const cookies = ([] as string[]).concat(res.headers["set-cookie"] as any);
+		expect(cookies.some((c) => c.startsWith("jwt=;"))).toBe(true);
+	});
+
+	it("defaults to 500 when the error has no status", async () => {
+		(AuthService.login as jest.Mock).mockRejectedValue(new Error("boom"));
+		const res = await request(app).post("/api/v1/auth/signin").send({ email: "a@b.com", password: "x" });
+		expect(res.status).toBe(500);
+	});
+
+	it("POST /signout clears cookies", async () => {
+		const res = await request(app).post("/api/v1/auth/signout");
+		expect(res.status).toBe(200);
+		expect(res.body).toEqual({ message: "User was signed out" });
+		const cookies = ([] as string[]).concat(res.headers["set-cookie"] as any);
+		expect(cookies.some((c) => c.startsWith("jwt=;"))).toBe(true);
+		expect(cookies.some((c) => c.startsWith("auth=false"))).toBe(true);
+	});
+});
