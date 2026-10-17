@@ -161,3 +161,17 @@ describe("ServiceTrackerService", () => {
 		});
 	});
 });
+
+describe("ServiceTrackerService.getOrCreateServiceTask – special characters", () => {
+	afterEach(() => jest.restoreAllMocks());
+
+	it("matches user-entered names literally", async () => {
+		const findOne = jest.spyOn(ServiceTask, "findOne").mockResolvedValue({ id: "t1", name: "Kontrola klimy (A/C)" } as any);
+
+		await ServiceTrackerService.getOrCreateServiceTask("Kontrola klimy (A/C)");
+		const re: RegExp = (findOne.mock.calls[0][0] as any).name.$regex;
+		expect(re.test("Kontrola klimy (A/C)")).toBe(true);
+
+		await expect(ServiceTrackerService.getOrCreateServiceTask("A/C (refill")).resolves.toBeTruthy();
+	});
+});

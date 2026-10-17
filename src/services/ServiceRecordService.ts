@@ -3,6 +3,7 @@ import ServiceTask from "../models/ServiceTask";
 import ServiceLog from "../models/ServiceLog";
 import { Err, Succ } from "./globalService";
 import { toCSV, parseCSV } from "../utils/csv";
+import { exactCaseInsensitive } from "../utils/regex";
 
 async function syncServiceLog(record: any) {
 	try {
@@ -23,7 +24,7 @@ async function syncServiceLog(record: any) {
 		}
 
 		// Find or create ServiceTask
-		let task = await ServiceTask.findOne({ name: { $regex: new RegExp(`^${mappedName}$`, "i") } });
+		let task = await ServiceTask.findOne({ name: { $regex: exactCaseInsensitive(mappedName) } });
 		if (!task) {
 			task = new ServiceTask({ name: mappedName });
 			await task.save();

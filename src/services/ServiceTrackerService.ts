@@ -6,6 +6,7 @@ import Refuel from "../models/Refuel";
 import OdometerRecord from "../models/OdometerRecord";
 import Vehicle from "../models/Vehicle";
 import { Err, Succ } from "./globalService";
+import { exactCaseInsensitive } from "../utils/regex";
 
 export interface ServiceIntervalDTO {
 	serviceTaskId?: string;
@@ -74,7 +75,7 @@ class ServiceTrackerService {
 	 */
 	static async getOrCreateServiceTask(name: string): Promise<any> {
 		try {
-			let task = await ServiceTask.findOne({ name: { $regex: new RegExp(`^${name}$`, "i") } });
+			let task = await ServiceTask.findOne({ name: { $regex: exactCaseInsensitive(name) } });
 			if (!task) {
 				task = new ServiceTask({ name });
 				await task.save();

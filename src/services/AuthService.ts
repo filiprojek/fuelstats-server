@@ -5,6 +5,7 @@ import env from "../config/environment";
 import { Err, Succ } from "../services/globalService";
 import { OidcProviderConfig } from "../config/oidc";
 import { OidcClaims } from "./OidcService";
+import { exactCaseInsensitive } from "../utils/regex";
 
 const authError = (status: number, message: string, code?: string, data?: any) => {
 	const error: any = new Error(message);
@@ -13,8 +14,6 @@ const authError = (status: number, message: string, code?: string, data?: any) =
 	new Err(status, message, data);
 	return error;
 };
-
-const escapeRegex = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 class AuthService {
 	/**
@@ -106,7 +105,7 @@ class AuthService {
 			throw authError(400, `${provider.name} did not provide an email address`, "email_missing", { provider: provider.id, sub: claims.sub });
 		}
 
-		const existing = await User.findOne({ email: { $regex: new RegExp(`^${escapeRegex(claims.email)}$`, "i") } });
+		const existing = await User.findOne({ email: { $regex: exactCaseInsensitive(claims.email) } });
 		if (existing) {
 			if (!claims.email_verified) {
 				throw authError(409, `An account with this email exists; sign in with your password and link ${provider.name} in settings`, "account_exists_unverified", {
