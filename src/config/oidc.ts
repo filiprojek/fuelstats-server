@@ -65,6 +65,10 @@ export function loadOidcProviders(source: EnvSource): OidcProviderConfig[] {
 void env;
 export const oidcProviders: OidcProviderConfig[] = loadOidcProviders(process.env);
 
+export function listOidcProviders(): OidcProviderConfig[] {
+	return oidcProviders;
+}
+
 export function getOidcProvider(id: string, providers: OidcProviderConfig[] = oidcProviders): OidcProviderConfig | undefined {
 	return providers.find((p) => p.id === id);
 }

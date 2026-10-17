@@ -47,7 +47,7 @@ export default {
 	APP_HOST: String(process.env.APP_HOST),
 	APP_HOSTNAME: process.env.APP_HOSTNAME !== undefined ? String(process.env.APP_HOSTNAME) : null,
 	// Public URL the API is reachable at (used for OIDC callbacks); defaults to the frontend url
-	API_PUBLIC_URL: String(process.env.API_PUBLIC_URL || process.env.APP_HOST),
+	API_PUBLIC_URL: String(process.env.API_PUBLIC_URL || process.env.APP_HOST || ""),
 	CORS_WHITELIST: String(process.env.CORS_WHITELIST),
 	JWT_SECRET: String(process.env.JWT_SECRET),
 	// MongoDB
