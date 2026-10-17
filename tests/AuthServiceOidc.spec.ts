@@ -178,3 +178,92 @@ describe("AuthService OIDC", () => {
 		});
 	});
 });
+
+describe("AuthService account sign-in methods", () => {
+	afterEach(() => jest.restoreAllMocks());
+
+	describe("unlinkIdentity", () => {
+		it("removes the provider identity when a password exists", async () => {
+			const user = userDoc({ identities: [{ provider: "authelia", subject: "s" }] });
+			jest.spyOn(User, "findById").mockResolvedValue(user as any);
+			await AuthService.unlinkIdentity("u1", "authelia");
+			expect(user.identities).toEqual([]);
+			expect(user.save).toHaveBeenCalled();
+		});
+
+		it("allows unlinking when another identity remains", async () => {
+			const user = userDoc({
+				password: undefined,
+				identities: [
+					{ provider: "authelia", subject: "s" },
+					{ provider: "google", subject: "g" },
+				],
+			});
+			jest.spyOn(User, "findById").mockResolvedValue(user as any);
+			await AuthService.unlinkIdentity("u1", "authelia");
+			expect(user.identities).toEqual([{ provider: "google", subject: "g" }]);
+		});
+
+		it("refuses to remove the last sign-in method", async () => {
+			const user = userDoc({ password: undefined, identities: [{ provider: "authelia", subject: "s" }] });
+			jest.spyOn(User, "findById").mockResolvedValue(user as any);
+			await expect(AuthService.unlinkIdentity("u1", "authelia")).rejects.toMatchObject({ status: 400, code: "last_sign_in_method" });
+			expect(user.save).not.toHaveBeenCalled();
+		});
+
+		it("returns 404 when the provider is not linked", async () => {
+			jest.spyOn(User, "findById").mockResolvedValue(userDoc() as any);
+			await expect(AuthService.unlinkIdentity("u1", "authelia")).rejects.toMatchObject({ status: 404 });
+		});
+
+		it("returns 404 when the user does not exist", async () => {
+			jest.spyOn(User, "findById").mockResolvedValue(null);
+			await expect(AuthService.unlinkIdentity("u1", "authelia")).rejects.toMatchObject({ status: 404 });
+		});
+	});
+
+	describe("setPassword", () => {
+		const bcrypt = require("bcryptjs");
+
+		it("sets a first password on an SSO-only account without the current one", async () => {
+			const user = userDoc({ password: undefined });
+			jest.spyOn(User, "findById").mockResolvedValue(user as any);
+			jest.spyOn(bcrypt, "hash").mockResolvedValue("newhash");
+			await AuthService.setPassword("u1", { newPassword: "longenough" });
+			expect(bcrypt.hash).toHaveBeenCalledWith("longenough", 10);
+			expect(user.password).toBe("newhash");
+			expect(user.save).toHaveBeenCalled();
+		});
+
+		it("requires the correct current password when one exists", async () => {
+			const user = userDoc();
+			jest.spyOn(User, "findById").mockResolvedValue(user as any);
+			jest.spyOn(bcrypt, "compare").mockResolvedValue(false);
+			await expect(AuthService.setPassword("u1", { currentPassword: "wrong", newPassword: "longenough" })).rejects.toMatchObject({
+				status: 401,
+				code: "invalid_current_password",
+			});
+			await expect(AuthService.setPassword("u1", { newPassword: "longenough" })).rejects.toMatchObject({ status: 401 });
+			expect(user.save).not.toHaveBeenCalled();
+		});
+
+		it("changes the password when the current one matches", async () => {
+			const user = userDoc();
+			jest.spyOn(User, "findById").mockResolvedValue(user as any);
+			jest.spyOn(bcrypt, "compare").mockResolvedValue(true);
+			jest.spyOn(bcrypt, "hash").mockResolvedValue("newhash");
+			await AuthService.setPassword("u1", { currentPassword: "old", newPassword: "longenough" });
+			expect(bcrypt.compare).toHaveBeenCalledWith("old", "hash");
+			expect(user.password).toBe("newhash");
+		});
+
+		it("rejects passwords shorter than 8 characters", async () => {
+			await expect(AuthService.setPassword("u1", { newPassword: "short" })).rejects.toMatchObject({ status: 400, code: "weak_password" });
+		});
+
+		it("returns 404 when the user does not exist", async () => {
+			jest.spyOn(User, "findById").mockResolvedValue(null);
+			await expect(AuthService.setPassword("u1", { newPassword: "longenough" })).rejects.toMatchObject({ status: 404 });
+		});
+	});
+});

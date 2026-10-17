@@ -153,6 +153,49 @@ class AuthService {
 		await user.save();
 		new Succ(200, `Linked ${provider.id} identity to user ${user.id}`);
 	}
+
+	/**
+	 * Remove a linked provider identity, keeping at least one way to sign in.
+	 */
+	static async unlinkIdentity(userId: string, providerId: string): Promise<void> {
+		const user = await User.findById(userId);
+		if (!user) {
+			throw authError(404, "User not found", "user_not_found", { userId });
+		}
+		const identities: any[] = user.identities || [];
+		if (!identities.some((i) => i.provider === providerId)) {
+			throw authError(404, `Provider ${providerId} is not linked`, "not_linked", { userId, providerId });
+		}
+		const remaining = identities.filter((i) => i.provider !== providerId);
+		if (!user.password && remaining.length === 0) {
+			throw authError(400, "Set a password or link another provider before removing your last sign-in method", "last_sign_in_method", { userId, providerId });
+		}
+		user.identities = remaining as any;
+		await user.save();
+		new Succ(200, `Unlinked ${providerId} from user ${userId}`);
+	}
+
+	/**
+	 * Set the first password (SSO-only accounts) or change an existing one.
+	 */
+	static async setPassword(userId: string, data: { currentPassword?: string; newPassword: string }): Promise<void> {
+		if (typeof data.newPassword !== "string" || data.newPassword.length < 8) {
+			throw authError(400, "Password must be at least 8 characters long", "weak_password", { userId });
+		}
+		const user = await User.findById(userId);
+		if (!user) {
+			throw authError(404, "User not found", "user_not_found", { userId });
+		}
+		if (user.password) {
+			const valid = typeof data.currentPassword === "string" && (await bcrypt.compare(data.currentPassword, user.password));
+			if (!valid) {
+				throw authError(401, "Current password is incorrect", "invalid_current_password", { userId });
+			}
+		}
+		user.password = await bcrypt.hash(data.newPassword, 10);
+		await user.save();
+		new Succ(200, `Password updated for user ${userId}`);
+	}
 }
 
 export default AuthService;
