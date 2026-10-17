@@ -43,6 +43,77 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/AuthToken'
+  '/api/v1/auth/signout':
+    post:
+      summary: Clear session cookies
+      responses:
+        '200':
+          description: Signed out
+  '/api/v1/auth/providers':
+    get:
+      summary: List configured single sign-on providers
+      responses:
+        '200':
+          description: Providers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/OidcProvider'
+  '/api/v1/auth/oidc/{provider}/start':
+    get:
+      summary: Start an OpenID Connect sign-in (browser navigation)
+      parameters:
+        - $ref: '#/components/parameters/Provider'
+        - name: link
+          in: query
+          required: false
+          description: Link token from POST /auth/oidc/{provider}/link
+          schema:
+            type: string
+      responses:
+        '302':
+          description: Redirect to the provider (or back to the app with an error)
+  '/api/v1/auth/oidc/{provider}/callback':
+    get:
+      summary: OpenID Connect redirect target
+      parameters:
+        - $ref: '#/components/parameters/Provider'
+        - name: code
+          in: query
+          schema:
+            type: string
+        - name: state
+          in: query
+          schema:
+            type: string
+        - name: error
+          in: query
+          schema:
+            type: string
+      responses:
+        '302':
+          description: Redirect to <APP_HOST>/auth/callback#token=..., /settings#linked=... or #error=<code>
+  '/api/v1/auth/oidc/{provider}/link':
+    post:
+      summary: Issue a short-lived token to link a provider to the current account
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/Provider'
+      responses:
+        '200':
+          description: Link token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  linkToken:
+                    type: string
+        '404':
+          description: Unknown provider
   '/api/v1/user/me':
     get:
       summary: Get current user
@@ -54,7 +125,47 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/User'
+                $ref: '#/components/schemas/CurrentUser'
+  '/api/v1/user/password':
+    put:
+      summary: Set or change the account password
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [newPassword]
+              properties:
+                currentPassword:
+                  type: string
+                  description: Required when the account already has a password
+                newPassword:
+                  type: string
+                  minLength: 8
+      responses:
+        '200':
+          description: Password updated
+        '400':
+          description: weak_password
+        '401':
+          description: invalid_current_password
+  '/api/v1/user/identities/{provider}':
+    delete:
+      summary: Unlink a single sign-on provider
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/Provider'
+      responses:
+        '200':
+          description: Provider unlinked
+        '400':
+          description: last_sign_in_method
+        '404':
+          description: Provider not linked
   '/api/v1/vehicles':
     get:
       summary: List vehicles
@@ -276,6 +387,14 @@ paths:
         '204':
           description: Deleted
 components:
+  parameters:
+    Provider:
+      name: provider
+      in: path
+      required: true
+      description: Provider id from OIDC_PROVIDERS
+      schema:
+        type: string
   securitySchemes:
     bearerAuth:
       type: http
@@ -291,6 +410,32 @@ components:
           type: string
           format: email
         username:
+          type: string
+    CurrentUser:
+      allOf:
+        - $ref: '#/components/schemas/User'
+        - type: object
+          properties:
+            hasPassword:
+              type: boolean
+            identities:
+              type: array
+              items:
+                type: object
+                properties:
+                  provider:
+                    type: string
+                  email:
+                    type: string
+                  linkedAt:
+                    type: string
+                    format: date-time
+    OidcProvider:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
           type: string
     NewUser:
       type: object

@@ -83,10 +83,54 @@ fetch('http://localhost:3000/api/v1/auth/signin', {
 });
 ```
 
+### POST /api/v1/auth/signout
+Clear the session cookies.
+
+### GET /api/v1/auth/providers
+List configured single sign-on (OpenID Connect) providers. Public.
+
+**Response**
+```json
+[{ "id": "authelia", "name": "Authelia" }]
+```
+
+### GET /api/v1/auth/oidc/{provider}/start
+Browser navigation (not XHR). Redirects to the provider's login page and stores a short-lived
+signed `oidc_state` cookie. Optional query `link=<linkToken>` (see below) links the provider to
+the signed-in account instead of logging in.
+
+### GET /api/v1/auth/oidc/{provider}/callback
+Redirect target registered at the provider. On success it sets the `jwt`/`auth` cookies and
+redirects to `<APP_HOST>/auth/callback#token=<JWT>`; for link requests to
+`<APP_HOST>/settings#linked=<provider>`. Errors redirect to `/login#error=<code>` (or
+`/settings#error=<code>` for link requests). Error codes: `unknown_provider`,
+`provider_unavailable`, `invalid_state`, `access_denied`, `account_exists_unverified`,
+`signup_disabled`, `email_missing`, `identity_in_use`, `link_expired`, `sso_failed`.
+
+### POST /api/v1/auth/oidc/{provider}/link
+Requires auth. Returns a 2 minute token to start a link flow:
+`GET /api/v1/auth/oidc/{provider}/start?link=<linkToken>`.
+
+**Response**
+```json
+{ "linkToken": "eyJ..." }
+```
+
 ## User
 
 ### GET /api/v1/user/me
-Return the current user.
+Return the current user including sign-in methods.
+
+**Response**
+```json
+{
+  "id": "665f...",
+  "email": "user@example.com",
+  "username": "bob",
+  "hasPassword": true,
+  "identities": [{ "provider": "authelia", "email": "user@example.com", "linkedAt": "2026-10-17T10:00:00.000Z" }]
+}
+```
 
 #### Curl
 ```bash
@@ -100,6 +144,21 @@ fetch('http://localhost:3000/api/v1/user/me', {
   headers: { Authorization: 'Bearer TOKEN' }
 });
 ```
+
+### PUT /api/v1/user/password
+Set the first password (accounts created through single sign-on) or change it.
+`currentPassword` is required when the account already has a password. Minimum length 8.
+
+**Body**
+```json
+{ "currentPassword": "old", "newPassword": "newpassword" }
+```
+
+Errors: `400 weak_password`, `401 invalid_current_password`.
+
+### DELETE /api/v1/user/identities/{provider}
+Unlink a single sign-on provider. Fails with `400 last_sign_in_method` when the account would
+be left without a password and without any other provider.
 
 ## Vehicles
 
