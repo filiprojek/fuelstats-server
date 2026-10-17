@@ -41,7 +41,7 @@ class AuthService {
 	 */
 	static async login(data: { email: string; password: string }): Promise<string> {
 		const user = await User.findOne({ email: data.email });
-		if (!user) {
+		if (!user || !user.password) {
 			const error: any = new Error("Invalid credentials");
 			error.status = 401;
 			new Err(error.status, "Authentication failed", {

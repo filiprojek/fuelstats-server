@@ -66,3 +66,14 @@ describe("AuthService", () => {
 		});
 	});
 });
+
+describe("AuthService.login without password", () => {
+	afterEach(() => jest.resetAllMocks());
+
+	it("rejects password login for SSO-only accounts", async () => {
+		jest.spyOn(User, "findOne").mockResolvedValue({ id: "1", email: "sso@example.com" } as any);
+		const compare = jest.spyOn(bcrypt, "compare");
+		await expect(AuthService.login({ email: "sso@example.com", password: "x" })).rejects.toMatchObject({ status: 401, message: "Invalid credentials" });
+		expect(compare).not.toHaveBeenCalled();
+	});
+});
