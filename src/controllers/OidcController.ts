@@ -5,6 +5,7 @@ import { getOidcProvider, listOidcProviders, oidcCallbackUrl } from "../config/o
 import AuthService from "../services/AuthService";
 import OidcService from "../services/OidcService";
 import { Err, Succ } from "../services/globalService";
+import { isRemember, setAuthCookies } from "../utils/authCookies";
 
 const STATE_COOKIE = "oidc_state";
 const STATE_MAX_AGE = 10 * 60; // seconds
@@ -61,7 +62,14 @@ class OidcController {
 		try {
 			const authReq = await OidcService.createAuthRequest(provider, oidcCallbackUrl(provider.id, publicBase(req)));
 			const state = jwt.sign(
-				{ provider: provider.id, state: authReq.state, nonce: authReq.nonce, codeVerifier: authReq.codeVerifier, linkUserId },
+				{
+					provider: provider.id,
+					state: authReq.state,
+					nonce: authReq.nonce,
+					codeVerifier: authReq.codeVerifier,
+					linkUserId,
+					remember: isRemember(req.query.remember),
+				},
 				env.JWT_SECRET,
 				{ expiresIn: STATE_MAX_AGE },
 			);
@@ -117,10 +125,10 @@ class OidcController {
 				return res.redirect(appUrl(`/settings#linked=${provider.id}`));
 			}
 
-			const { token } = await AuthService.loginWithOidc(provider, claims);
-			res.cookie("jwt", token, { httpOnly: true, maxAge: AuthService.jwtMaxAge * 1000 });
-			res.cookie("auth", true, { httpOnly: false, maxAge: AuthService.jwtMaxAge * 1000 });
-			return res.redirect(appUrl(`/auth/callback#token=${encodeURIComponent(token)}`));
+			const remember = saved.remember === true;
+			const { token } = await AuthService.loginWithOidc(provider, claims, remember);
+			setAuthCookies(res, token, remember);
+			return res.redirect(appUrl(`/auth/callback#token=${encodeURIComponent(token)}${remember ? "&remember=1" : ""}`));
 		} catch (err: any) {
 			new Err(err.status || 500, err.message);
 			return res.redirect(appUrl(`${target}#error=${errorCode(err)}`));

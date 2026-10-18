@@ -27,6 +27,8 @@ export function requireAuth(req: AuthRequest, res: Response, next: NextFunction)
 
 	try {
 		const decoded = jwt.verify(token, env.JWT_SECRET) as any;
+		// short-lived tokens for other purposes (e.g. SSO linking) are not sessions
+		if (decoded.purpose) throw new Error("not a session token");
 		req.user = decoded;
 		new Succ(200, `Token verified for user ${decoded.sub}`);
 		next();

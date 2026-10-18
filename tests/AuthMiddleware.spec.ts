@@ -54,4 +54,11 @@ describe("requireAuth middleware", () => {
 		const res = await request(app).get("/protected").set("Authorization", `Bearer ${expired}`);
 		expect(res.status).toBe(401);
 	});
+
+	it("rejects special-purpose tokens such as SSO link tokens", async () => {
+		const link = jwt.sign({ sub: "u1", purpose: "oidc-link", provider: "authelia" }, env.JWT_SECRET, { expiresIn: 60 });
+		const res = await request(app).get("/protected").set("Authorization", `Bearer ${link}`);
+		expect(res.status).toBe(401);
+		expect(res.body).toEqual({ message: "Invalid token" });
+	});
 });

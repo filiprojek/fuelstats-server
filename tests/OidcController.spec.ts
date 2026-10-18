@@ -84,6 +84,18 @@ describe("OidcController", () => {
 			expect(payload.linkUserId).toBeUndefined();
 		});
 
+		it.each([
+			["1", true],
+			["true", true],
+			["0", false],
+		])("stores remember=%s in the state", async (value, expected) => {
+			(OidcService.createAuthRequest as jest.Mock).mockResolvedValue({ url: "https://idp/authorize", state: "s", nonce: "n", codeVerifier: "c" });
+			const res = await request(app).get(`/api/v1/auth/oidc/authelia/start?remember=${value}`);
+			const cookie = cookiesOf(res).find((c) => c.startsWith("oidc_state="))!;
+			const payload: any = jwt.verify(decodeURIComponent(cookie.split(";")[0].split("=")[1]), env.JWT_SECRET);
+			expect(payload.remember).toBe(expected);
+		});
+
 		it("falls back to the request origin when no public url is configured", async () => {
 			(env as any).API_PUBLIC_URL = "";
 			(OidcService.createAuthRequest as jest.Mock).mockResolvedValue({ url: "https://idp/authorize", state: "s", nonce: "n", codeVerifier: "c" });
@@ -142,13 +154,25 @@ describe("OidcController", () => {
 				nonce: "nn",
 				redirectUri: `${APP}/api/v1/auth/oidc/authelia/callback`,
 			});
-			expect(AuthService.loginWithOidc).toHaveBeenCalledWith(provider, claims);
+			expect(AuthService.loginWithOidc).toHaveBeenCalledWith(provider, claims, false);
 			expect(res.status).toBe(302);
 			expect(res.headers.location).toBe(`${APP}/auth/callback#token=tok`);
 			const cookies = cookiesOf(res);
-			expect(cookies.some((c) => c.startsWith("jwt=tok") && /HttpOnly/.test(c))).toBe(true);
+			expect(cookies.some((c) => c.startsWith("jwt=tok") && /HttpOnly/.test(c) && !/Max-Age/.test(c))).toBe(true);
 			expect(cookies.some((c) => c.startsWith("auth=true"))).toBe(true);
 			expect(cookies.some((c) => c.startsWith("oidc_state=;"))).toBe(true);
+		});
+
+		it("keeps a remembered session and tells the app to remember it", async () => {
+			(AuthService.maxAge as jest.Mock).mockReturnValue(30 * 86400);
+			(OidcService.exchangeCode as jest.Mock).mockResolvedValue(claims);
+			(AuthService.loginWithOidc as jest.Mock).mockResolvedValue({ token: "tok", userId: "u1", created: false, linked: false });
+
+			const res = await request(app).get("/api/v1/auth/oidc/authelia/callback?code=abc&state=st").set("Cookie", stateCookie({ remember: true }));
+
+			expect(AuthService.loginWithOidc).toHaveBeenCalledWith(provider, claims, true);
+			expect(res.headers.location).toBe(`${APP}/auth/callback#token=tok&remember=1`);
+			expect(cookiesOf(res).find((c) => c.startsWith("jwt=tok"))).toMatch(/Max-Age=2592000/);
 		});
 
 		it("links the identity when the state belongs to a link request", async () => {

@@ -17,9 +17,16 @@ const authError = (status: number, message: string, code?: string, data?: any) =
 
 class AuthService {
 	/**
-	 * Constant that stores JWT expire time in seconds
+	 * Lifetime of a session that is not remembered, in seconds
 	 */
-	static jwtMaxAge = 3 * 24 * 60 * 60; // 3 days in seconds
+	static sessionMaxAge = 24 * 60 * 60; // 1 day
+
+	/**
+	 * Token lifetime in seconds; remembered sessions last AUTH_REMEMBER_DAYS
+	 */
+	static maxAge(remember: boolean): number {
+		return remember ? env.AUTH_REMEMBER_DAYS * 24 * 60 * 60 : this.sessionMaxAge;
+	}
 
 	/**
 	 * Register a new user with email/password.
@@ -50,7 +57,7 @@ class AuthService {
 	 * Authenticate a user and issue a JWT.
 	 * @returns A signed JWT token.
 	 */
-	static async login(data: { email: string; password: string }): Promise<string> {
+	static async login(data: { email: string; password: string; remember?: boolean }): Promise<string> {
 		const user = await User.findOne({ email: data.email });
 		if (!user || !user.password) {
 			const error: any = new Error("Invalid credentials");
@@ -71,18 +78,32 @@ class AuthService {
 			throw error;
 		}
 
-		const token = this.signToken(user);
+		const token = this.signToken(user, !!data.remember);
 		new Succ(200, `Token issued for user ${user.id}`);
 		return token;
 	}
 
 	/**
-	 * Issue a session JWT for a user.
+	 * Issue a session JWT for a user. Remembered sessions carry `rem: true` so refreshes keep their lifetime.
 	 */
-	static signToken(user: { id?: string; email: string }): string {
-		return jwt.sign({ sub: user.id, email: user.email }, env.JWT_SECRET, {
-			expiresIn: this.jwtMaxAge,
+	static signToken(user: { id?: string; email: string }, remember = false): string {
+		const payload: Record<string, unknown> = { sub: user.id, email: user.email };
+		if (remember) payload.rem = true;
+		return jwt.sign(payload, env.JWT_SECRET, {
+			expiresIn: this.maxAge(remember),
 		});
+	}
+
+	/**
+	 * Issue a fresh token for a signed-in user, keeping the remember choice (sliding session).
+	 */
+	static async refresh(userId: string, remember: boolean): Promise<{ token: string; remember: boolean }> {
+		const user = await User.findById(userId);
+		if (!user) {
+			throw authError(401, "User not found", undefined, { userId });
+		}
+		new Succ(200, `Session refreshed for user ${user.id}`);
+		return { token: this.signToken(user, remember), remember };
 	}
 
 	/**
@@ -92,13 +113,14 @@ class AuthService {
 	static async loginWithOidc(
 		provider: OidcProviderConfig,
 		claims: OidcClaims,
+		remember = false,
 	): Promise<{ token: string; userId: string; created: boolean; linked: boolean }> {
 		const identity = { provider: provider.id, subject: claims.sub, email: claims.email, linkedAt: new Date() };
 
 		const linkedUser = await User.findOne({ identities: { $elemMatch: { provider: provider.id, subject: claims.sub } } });
 		if (linkedUser) {
 			new Succ(200, `User ${linkedUser.id} signed in with ${provider.id}`);
-			return { token: this.signToken(linkedUser), userId: linkedUser.id, created: false, linked: false };
+			return { token: this.signToken(linkedUser, remember), userId: linkedUser.id, created: false, linked: false };
 		}
 
 		if (!claims.email) {
@@ -116,7 +138,7 @@ class AuthService {
 			existing.identities.push(identity);
 			await existing.save();
 			new Succ(200, `Linked ${provider.id} identity to user ${existing.id} by verified email`);
-			return { token: this.signToken(existing), userId: existing.id, created: false, linked: true };
+			return { token: this.signToken(existing, remember), userId: existing.id, created: false, linked: true };
 		}
 
 		if (!provider.allowSignup) {
@@ -130,7 +152,7 @@ class AuthService {
 		});
 		await user.save();
 		new Succ(201, `User ${user.id} registered through ${provider.id}`);
-		return { token: this.signToken(user), userId: user.id, created: true, linked: true };
+		return { token: this.signToken(user, remember), userId: user.id, created: true, linked: true };
 	}
 
 	/**

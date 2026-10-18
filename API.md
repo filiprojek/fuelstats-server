@@ -60,8 +60,18 @@ Authenticate a user and return a JWT token.
 ```json
 {
   "email": "user@example.com",
-  "password": "strongpassword"
+  "password": "strongpassword",
+  "remember": true
 }
+```
+
+`remember` (optional): `true` issues a token valid for `AUTH_REMEMBER_DAYS` (default 30 days)
+with persistent cookies; otherwise the token is valid for 1 day and the cookies end with the
+browser session.
+
+**Response**
+```json
+{ "token": "<JWT>", "remember": true }
 ```
 
 #### Curl
@@ -86,6 +96,15 @@ fetch('http://localhost:3000/api/v1/auth/signin', {
 ### POST /api/v1/auth/signout
 Clear the session cookies.
 
+### POST /api/v1/auth/refresh
+Requires auth. Returns a fresh token with the same lifetime as the current one (sliding session)
+and renews the cookies. Clients should call it periodically, e.g. once a day when the app opens.
+
+**Response**
+```json
+{ "token": "<JWT>", "remember": true }
+```
+
 ### GET /api/v1/auth/providers
 List configured single sign-on (OpenID Connect) providers. Public.
 
@@ -97,11 +116,12 @@ List configured single sign-on (OpenID Connect) providers. Public.
 ### GET /api/v1/auth/oidc/{provider}/start
 Browser navigation (not XHR). Redirects to the provider's login page and stores a short-lived
 signed `oidc_state` cookie. Optional query `link=<linkToken>` (see below) links the provider to
-the signed-in account instead of logging in.
+the signed-in account instead of logging in; `remember=1` issues a remembered session (see
+signin).
 
 ### GET /api/v1/auth/oidc/{provider}/callback
 Redirect target registered at the provider. On success it sets the `jwt`/`auth` cookies and
-redirects to `<APP_HOST>/auth/callback#token=<JWT>`; for link requests to
+redirects to `<APP_HOST>/auth/callback#token=<JWT>` (with `&remember=1` for remembered sessions); for link requests to
 `<APP_HOST>/settings#linked=<provider>`. Errors redirect to `/login#error=<code>` (or
 `/settings#error=<code>` for link requests). Error codes: `unknown_provider`,
 `provider_unavailable`, `invalid_state`, `access_denied`, `account_exists_unverified`,

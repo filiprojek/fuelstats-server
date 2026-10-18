@@ -9,6 +9,7 @@ const router = Router();
 router.post("/signup", AuthController.signup);
 router.post("/signin", AuthController.signin);
 router.post("/signout", AuthController.signout);
+router.post("/refresh", requireAuth, AuthController.refresh);
 
 // Single sign-on (OpenID Connect)
 router.get("/providers", OidcController.providers);

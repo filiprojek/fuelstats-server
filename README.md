@@ -121,6 +121,18 @@ Fuelstats always supports **email + password** accounts. In addition, any number
 When at least one provider is configured, the app shows a *Continue with …* button on the
 login and sign-up pages.
 
+### Staying signed in ("Remember me")
+
+The login page has a **Remember me** checkbox (on by default), which also applies to provider
+logins:
+
+* **Remember me on** – the session lasts `AUTH_REMEMBER_DAYS` (default **30 days**) and is
+  renewed every time the app is opened, so regular users stay signed in indefinitely. Only
+  30 days without opening the app require a new login.
+* **Remember me off** – a 1 day session that ends when the browser is closed.
+
+Sessions are JWTs signed with `JWT_SECRET`; changing the secret signs everyone out.
+
 ### How accounts are matched
 
 A user can sign in with their password **and** with any linked provider – it is always the
@@ -151,6 +163,7 @@ password. The last remaining sign-in method can't be removed.
 | `OIDC_<ID>_ALLOW_SIGNUP` | no | `false` to only allow existing accounts. Defaults to `true`. |
 | `API_PUBLIC_URL` | no | Public URL the API is reachable at. Defaults to `APP_HOST` (correct when the frontend proxies `/api/v1`, as in the Docker setup). Set it when the API lives on a different origin, e.g. `http://localhost:6060` in development. |
 | `APP_HOST` | yes | Public URL of the frontend – users are redirected back there after signing in. |
+| `AUTH_REMEMBER_DAYS` | no | Lifetime of a "Remember me" session in days, renewed while the app is used. Defaults to `30`. |
 
 `<ID>` is the provider id in upper case with `-` replaced by `_` (`pocket-id` → `OIDC_POCKET_ID_…`).
 

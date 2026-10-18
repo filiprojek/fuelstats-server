@@ -40,7 +40,7 @@ describe("AuthService OIDC", () => {
 			const token = AuthService.signToken({ id: "u1", email: "a@b.com" });
 			const decoded: any = jwt.verify(token, env.JWT_SECRET);
 			expect(decoded).toMatchObject({ sub: "u1", email: "a@b.com" });
-			expect(decoded.exp - decoded.iat).toBe(AuthService.jwtMaxAge);
+			expect(decoded.exp - decoded.iat).toBe(AuthService.maxAge(false));
 		});
 	});
 

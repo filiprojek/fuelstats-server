@@ -32,6 +32,12 @@ if (!fs.existsSync(path.join(__dirname, env_path))) {
 	}
 }
 
+/** Lifetime of a "remember me" session in days (default 30) */
+export const parseRememberDays = (value: string | undefined): number => {
+	const days = Number(value);
+	return Number.isFinite(days) && days > 0 ? days : 30;
+};
+
 if (process.env.NODE_ENV === "test") {
 	process.env.JWT_SECRET = process.env.JWT_SECRET || "testsecret";
 }
@@ -50,6 +56,7 @@ export default {
 	API_PUBLIC_URL: String(process.env.API_PUBLIC_URL || process.env.APP_HOST || ""),
 	CORS_WHITELIST: String(process.env.CORS_WHITELIST),
 	JWT_SECRET: String(process.env.JWT_SECRET),
+	AUTH_REMEMBER_DAYS: parseRememberDays(process.env.AUTH_REMEMBER_DAYS),
 	// MongoDB
 	DB_URI: String(process.env.DB_URI),
 	// PostgreSQL
