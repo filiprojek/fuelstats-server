@@ -115,6 +115,20 @@ describe("ServiceTrackerService – detailed behaviour", () => {
 			expect(fine.nextServiceDate).toBeInstanceOf(Date);
 		});
 
+		it("counts kilometers from a standalone odometer record newer than the last refuel", async () => {
+			latest = { refuel: 15000, odo: 21000 };
+			logs.t1 = { date: daysFromNow(-10), odometer: 12000 };
+			const [s] = await status([{ serviceTaskId: "t1", intervalKm: 10000, intervalMonths: null }]);
+			expect(s).toMatchObject({ nextServiceOdometer: 22000, remainingKm: 1000, status: "WARNING" });
+		});
+
+		it("counts kilometers from a service record of another task newer than the last refuel", async () => {
+			latest = { refuel: 15000, log: 23000, record: 23000 };
+			logs.t1 = { date: daysFromNow(-10), odometer: 12000 };
+			const [s] = await status([{ serviceTaskId: "t1", intervalKm: 10000, intervalMonths: null }]);
+			expect(s).toMatchObject({ remainingKm: -1000, status: "OVERDUE" });
+		});
+
 		it("reports whichever limit comes first", async () => {
 			latest.refuel = 12000;
 			logs.t1 = { date: daysFromNow(-10), odometer: 0 };
