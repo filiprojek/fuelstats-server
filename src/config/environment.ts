@@ -38,6 +38,9 @@ export const parseRememberDays = (value: string | undefined): number => {
 	return Number.isFinite(days) && days > 0 ? days : 30;
 };
 
+/** Maximum JSON/form request body size (photos are uploaded as base64), e.g. "25mb" */
+export const parseBodyLimit = (value: string | undefined): string => (value && value.trim() ? value.trim() : "25mb");
+
 if (process.env.NODE_ENV === "test") {
 	process.env.JWT_SECRET = process.env.JWT_SECRET || "testsecret";
 }
@@ -57,6 +60,7 @@ export default {
 	CORS_WHITELIST: String(process.env.CORS_WHITELIST),
 	JWT_SECRET: String(process.env.JWT_SECRET),
 	AUTH_REMEMBER_DAYS: parseRememberDays(process.env.AUTH_REMEMBER_DAYS),
+	BODY_LIMIT: parseBodyLimit(process.env.BODY_LIMIT),
 	// MongoDB
 	DB_URI: String(process.env.DB_URI),
 	// PostgreSQL

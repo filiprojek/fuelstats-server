@@ -3,6 +3,7 @@ import request from "supertest";
 import { query } from "express-validator";
 import handleValidation from "../src/middlewares/handleValidation";
 import { app } from "../src/app";
+import { parseBodyLimit } from "../src/config/environment";
 
 describe("handleValidation", () => {
 	const testApp = express();
@@ -42,5 +43,27 @@ describe("app routing", () => {
 		expect(ok.headers["access-control-allow-credentials"]).toBe("true");
 		const blocked = await request(app).get("/api/v1/version").set("Origin", "http://evil.example.com");
 		expect(blocked.status).toBe(500);
+	});
+});
+
+describe("request body size", () => {
+	const json = (bytes: number) => JSON.stringify({ photos: [`data:image/jpeg;base64,${"A".repeat(bytes)}`] });
+
+	it("defaults the body limit to 25mb and accepts custom values", () => {
+		expect(parseBodyLimit(undefined)).toBe("25mb");
+		expect(parseBodyLimit("")).toBe("25mb");
+		expect(parseBodyLimit("50mb")).toBe("50mb");
+	});
+
+	it("accepts JSON bodies with photos well above the express default of 100kb", async () => {
+		// parsed successfully, then rejected by requireAuth instead of the body parser
+		const res = await request(app).post("/api/v1/services").set("Content-Type", "application/json").send(json(5 * 1024 * 1024));
+		expect(res.status).toBe(401);
+	});
+
+	it("answers bodies above the limit with a JSON 413", async () => {
+		const res = await request(app).post("/api/v1/services").set("Content-Type", "application/json").send(json(26 * 1024 * 1024));
+		expect(res.status).toBe(413);
+		expect(res.body).toEqual({ message: expect.stringMatching(/too large/i) });
 	});
 });

@@ -1,4 +1,4 @@
-import express from "express";
+import express, { type NextFunction, type Request, type Response } from "express";
 import morgan from "morgan";
 import path from "path";
 import cors from "cors";
@@ -33,8 +33,8 @@ app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
 app.use(cors(corsOptions));
 app.use(morgan("dev"));
-app.use(express.urlencoded({ extended: true }));
-app.use(express.json());
+app.use(express.urlencoded({ extended: true, limit: env.BODY_LIMIT }));
+app.use(express.json({ limit: env.BODY_LIMIT }));
 app.use(express.static(path.join(__dirname, "public")));
 app.use(cookieParser());
 
@@ -47,4 +47,12 @@ app.get(/.*/, (req, res, next) => {
 		return next();
 	}
 	res.sendFile(path.join(__dirname, "public", "index.html"));
+});
+
+// Body parser errors: answer oversized uploads with JSON the app can show
+app.use((err: any, _req: Request, res: Response, next: NextFunction) => {
+	if (err?.type === "entity.too.large") {
+		return res.status(413).json({ message: `Request too large (limit ${env.BODY_LIMIT}). Try fewer or smaller photos.` });
+	}
+	return next(err);
 });

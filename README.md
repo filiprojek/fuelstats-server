@@ -110,6 +110,7 @@ docker compose up -d --build
 
 * Secrets like `DB_URI` are injected from `.env.production` (mounted into the container).
 * Logs are written to `dist/logs/` — you can mount this to the host if you want persistence.
+* `BODY_LIMIT` (default `25mb`) caps the request body size. Service photos are uploaded inside the JSON body, so a reverse proxy in front of the API needs at least the same limit (nginx: `client_max_body_size 25m;`).
 
 ---
 
