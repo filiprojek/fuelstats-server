@@ -6,6 +6,8 @@ export interface IOdometerRecord extends Document {
 	mileage: number;
 	date: Date;
 	note?: string;
+	/** Marks where the vehicle's odometer history starts (e.g. at purchase); one per vehicle */
+	isStart: boolean;
 	createdAt: Date;
 }
 
@@ -31,6 +33,10 @@ const odometerRecordSchema = new Schema<IOdometerRecord>(
 		},
 		note: {
 			type: String,
+		},
+		isStart: {
+			type: Boolean,
+			default: false,
 		},
 	},
 	{ timestamps: { createdAt: true, updatedAt: false } }

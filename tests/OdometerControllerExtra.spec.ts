@@ -20,7 +20,7 @@ describe("OdometerController – edge cases", () => {
 		it("converts mileage and date", async () => {
 			const spy = jest.spyOn(OdometerService, "create").mockResolvedValue({ id: "o1" } as any);
 			await request(app).post("/api/v1/odometer").set(auth).send({ vehicleId: "v1", mileage: "123", date: "2026-01-02", note: "n" });
-			expect(spy).toHaveBeenCalledWith({ userId, vehicleId: "v1", mileage: 123, date: new Date("2026-01-02"), note: "n" });
+			expect(spy).toHaveBeenCalledWith({ userId, vehicleId: "v1", mileage: 123, date: new Date("2026-01-02"), note: "n", isStart: false });
 		});
 
 		it("returns 500 when creation fails", async () => {

@@ -2,6 +2,8 @@ import { Request, Response } from "express";
 import OdometerService from "../services/OdometerService";
 import { Err } from "../services/globalService";
 
+const isTrue = (v: unknown) => v === true || v === "true";
+
 class OdometerController {
 	/**
 	 * POST /api/v1/odometer
@@ -10,7 +12,7 @@ class OdometerController {
 	static async create(req: Request, res: Response): Promise<Response> {
 		try {
 			const userId = (req as any).user.sub as string;
-			const { vehicleId, mileage, date, note } = req.body;
+			const { vehicleId, mileage, date, note, isStart } = req.body;
 
 			if (!vehicleId || mileage === undefined || mileage === null) {
 				return res.status(400).json({ message: "vehicleId and mileage are required" });
@@ -22,10 +24,14 @@ class OdometerController {
 				mileage: Number(mileage),
 				date: date ? new Date(date) : new Date(),
 				note,
+				isStart: isTrue(isStart),
 			});
 
 			return res.status(201).json(record);
 		} catch (err: any) {
+			if (err.status === 409) {
+				return res.status(409).json({ message: err.message });
+			}
 			new Err(500, "Failed to create odometer record", err);
 			return res.status(500).json({ message: "Failed to create odometer record" });
 		}
@@ -74,19 +80,23 @@ class OdometerController {
 		try {
 			const userId = (req as any).user.sub as string;
 			const id = req.params.id;
-			const { vehicleId, mileage, date, note } = req.body;
+			const { vehicleId, mileage, date, note, isStart } = req.body;
 
 			const updatePayload: any = {};
 			if (vehicleId) updatePayload.vehicleId = vehicleId;
 			if (mileage !== undefined && mileage !== null) updatePayload.mileage = Number(mileage);
 			if (date) updatePayload.date = new Date(date);
 			if (note !== undefined) updatePayload.note = note;
+			if (isStart !== undefined) updatePayload.isStart = isTrue(isStart);
 
 			const updated = await OdometerService.update(id, userId, updatePayload);
 			return res.status(200).json(updated);
 		} catch (err: any) {
 			if (err.message === "Odometer record not found") {
 				return res.status(404).json({ message: "Odometer record not found" });
+			}
+			if (err.status === 409) {
+				return res.status(409).json({ message: err.message });
 			}
 			new Err(500, "Failed to update odometer record", err);
 			return res.status(500).json({ message: "Failed to update odometer record" });
