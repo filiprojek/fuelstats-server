@@ -1,5 +1,7 @@
 import express from "express";
 import { query } from "express-validator";
+import fs from "fs";
+import path from "path";
 import request from "supertest";
 import { app } from "../src/app";
 import { parseBodyLimit } from "../src/config/environment";
@@ -35,6 +37,45 @@ describe("app routing", () => {
 		const res = await request(app).get("/api/v1/does-not-exist");
 		expect(res.status).toBe(404);
 		expect(res.text).toBe("E404");
+	});
+
+	describe("SPA fallback", () => {
+		// The built frontend is copied into src/public at image build time (gitignored),
+		// so provide a stand-in index.html unless a real build is already there.
+		const indexHtml = path.join(__dirname, "../src/public/index.html");
+		let created = false;
+		beforeAll(() => {
+			if (!fs.existsSync(indexHtml)) {
+				fs.writeFileSync(indexHtml, "<!doctype html><title>spa-fixture</title>");
+				created = true;
+			}
+		});
+		afterAll(() => {
+			if (created) fs.unlinkSync(indexHtml);
+		});
+
+		it.each(["/login", "/vehicles/123", "/settings/sign-in"])("serves index.html for client route %s", async (route) => {
+			const res = await request(app).get(route);
+			expect(res.status).toBe(200);
+			expect(res.headers["content-type"]).toMatch(/html/);
+			expect(res.text).toBe(fs.readFileSync(indexHtml, "utf8"));
+		});
+
+		it("does not serve index.html for missing files", async () => {
+			const res = await request(app).get("/assets/missing-chunk.js");
+			expect(res.status).toBe(404);
+		});
+
+		it("does not serve index.html for non-GET requests", async () => {
+			const res = await request(app).post("/login");
+			expect(res.status).toBe(404);
+		});
+
+		it("still answers unknown API routes with 404", async () => {
+			const res = await request(app).get("/api/v1/does-not-exist");
+			expect(res.status).toBe(404);
+			expect(res.text).toBe("E404");
+		});
 	});
 
 	it("allows whitelisted CORS origins and rejects others", async () => {

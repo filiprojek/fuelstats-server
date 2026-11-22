@@ -41,12 +41,20 @@ app.use(cookieParser());
 // Routes
 app.use(routes);
 
-// SPA fallback: Serve index.html for client-side routing on non-API routes
+// SPA fallback: serve index.html for client-side routes (refresh, deep links, OIDC redirect).
+// Paths with a file extension are missing static files and must stay 404.
+const spaIndex = path.join(__dirname, "public", "index.html");
 app.get(/.*/, (req, res, next) => {
-	if (req.path.startsWith("/api/")) {
+	if (req.path.startsWith("/api/") || path.extname(req.path)) {
 		return next();
 	}
-	res.sendFile(path.join(__dirname, "public", "index.html"));
+	res.sendFile(spaIndex, (err) => {
+		if (err && !res.headersSent) next();
+	});
+});
+
+app.use((_req: Request, res: Response) => {
+	res.status(404).send("E404");
 });
 
 // Body parser errors: answer oversized uploads with JSON the app can show

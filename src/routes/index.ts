@@ -27,7 +27,7 @@ router.use("/api/v1/refuels", RefuelRoutes);
 router.use("/api/v1/services", ServiceRecordRoutes);
 router.use("/api/v1/odometer", OdometerRoutes);
 
-// 404
-router.use((req: Request, res: Response) => {
+// 404 for unknown API routes; everything else falls through to the SPA fallback in app.ts
+router.use("/api", (req: Request, res: Response) => {
 	res.status(404).send("E404");
 });
