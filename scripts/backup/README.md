@@ -54,4 +54,4 @@ The archives contain secrets from `.env`, so they are written with mode `600` in
 ## 3. Updates: `update-fuelstats.sh`
 
 Stops the stack and takes a `snapshot.sh create`-style tarball into `/srv/docker/fuelstats-backups/`, keeping the newest 5 (`KEEP_BACKUPS`). It then pulls the frontend and backend, rebuilds and starts the stack.
-Run it as `fr`: it asks for sudo once, up front. If any step fails, it stops and starts the stack again. At the end it prints the rollback command (`sudo ./snapshot.sh restore <tarball>`).
+Run it as `fr`. It gets root through `doas` (or `sudo` if doas isn't installed) once, for the stop + snapshot step, so it asks for the password a single time, before the stack goes down. Git pulls and builds stay as your user, so no root-owned files end up in the checkouts. If any step fails, it stops and starts the stack again. At the end it prints the rollback command (`doas ./snapshot.sh restore <tarball>`).
