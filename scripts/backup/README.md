@@ -1,6 +1,6 @@
 # Fuelstats backups
 
-Copy both scripts to the production stack dir (`/srv/docker/fuelstats-3/`) and run them as root.
+Copy the scripts to the production stack dir (`/srv/docker/fuelstats-3/`) and run them as root.
 
 What gets backed up:
 
@@ -50,3 +50,8 @@ restic restore <id> --target /tmp/fs-restore   # then copy fuelstats-uploads/ et
 - Use `dump` when you can't afford downtime, or to move the data to another server or another MongoDB version.
 
 The archives contain secrets from `.env`, so they are written with mode `600` into a `700` directory.
+
+## 3. Updates: `update-fuelstats.sh`
+
+Stops the stack and takes a `snapshot.sh create`-style tarball into `/srv/docker/fuelstats-backups/`, keeping the newest 5 (`KEEP_BACKUPS`). It then pulls the frontend and backend, rebuilds and starts the stack.
+Run it as `fr`: it asks for sudo once, up front. If any step fails, it stops and starts the stack again. At the end it prints the rollback command (`sudo ./snapshot.sh restore <tarball>`).

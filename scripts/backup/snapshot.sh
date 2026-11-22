@@ -65,8 +65,9 @@ do_restore() {
 	log "extracting $tarball"
 	tar -xzpf "$tarball" -C "$PARENT_DIR"
 
-	log "starting stack"
-	compose up -d
+	# --build: the api-server image may already be built from newer code (e.g. after an update).
+	log "rebuilding and starting stack"
+	compose up -d --build
 	log "done. Old dir kept at $old — delete it once everything looks fine."
 }
 
