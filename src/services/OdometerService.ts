@@ -1,5 +1,6 @@
 import OdometerRecord, { IOdometerRecord } from "../models/OdometerRecord";
 import { Err, Succ } from "./globalService";
+import { nullIfInvalidId } from "../utils/objectId";
 
 export interface CreateOdometerDTO {
 	userId: string;
@@ -109,7 +110,7 @@ class OdometerService {
 	 */
 	static async getById(id: string, userId: string): Promise<OdometerPayload | null> {
 		try {
-			const record = await OdometerRecord.findOne({ _id: id, userId });
+			const record = await nullIfInvalidId(OdometerRecord.findOne({ _id: id, userId }));
 			if (!record) {
 				new Err(404, "Odometer record not found", { id, userId });
 				return null;
@@ -132,7 +133,7 @@ class OdometerService {
 		try {
 			// a record that is (or becomes) the start must stay the only one of its vehicle
 			if (payload.isStart === true || payload.vehicleId) {
-				const current = await OdometerRecord.findOne({ _id: id, userId });
+				const current = await nullIfInvalidId(OdometerRecord.findOne({ _id: id, userId }));
 				if (!current) {
 					new Err(404, "Odometer record not found");
 					throw new Error("Odometer record not found");
@@ -143,7 +144,7 @@ class OdometerService {
 				}
 			}
 
-			const updated = await OdometerRecord.findOneAndUpdate({ _id: id, userId }, payload, { new: true });
+			const updated = await nullIfInvalidId(OdometerRecord.findOneAndUpdate({ _id: id, userId }, payload, { new: true }));
 			if (!updated) {
 				new Err(404, "Odometer record not found");
 				throw new Error("Odometer record not found");
@@ -167,7 +168,7 @@ class OdometerService {
 	 */
 	static async remove(id: string, userId: string): Promise<boolean> {
 		try {
-			const deleted = await OdometerRecord.findOneAndDelete({ _id: id, userId });
+			const deleted = await nullIfInvalidId(OdometerRecord.findOneAndDelete({ _id: id, userId }));
 			if (!deleted) {
 				new Err(404, "Odometer record not found or not owned by user", { id, userId });
 				throw new Error("Odometer record not found");

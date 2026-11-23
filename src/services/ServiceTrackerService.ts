@@ -7,6 +7,7 @@ import OdometerRecord from "../models/OdometerRecord";
 import Vehicle from "../models/Vehicle";
 import { Err, Succ } from "./globalService";
 import { exactCaseInsensitive } from "../utils/regex";
+import { nullIfInvalidId } from "../utils/objectId";
 
 export interface ServiceIntervalDTO {
 	serviceTaskId?: string;
@@ -116,7 +117,7 @@ class ServiceTrackerService {
 	static async getServiceIntervals(userId: string, carId: string): Promise<any[]> {
 		try {
 			// Verify vehicle ownership
-			const vehicle = await Vehicle.findOne({ _id: carId, userId });
+			const vehicle = await nullIfInvalidId(Vehicle.findOne({ _id: carId, userId }));
 			if (!vehicle) {
 				throw new Error("Vehicle not found");
 			}
@@ -148,7 +149,7 @@ class ServiceTrackerService {
 	static async saveServiceIntervals(userId: string, carId: string, intervals: ServiceIntervalDTO[]): Promise<any[]> {
 		try {
 			// Verify vehicle ownership
-			const vehicle = await Vehicle.findOne({ _id: carId, userId });
+			const vehicle = await nullIfInvalidId(Vehicle.findOne({ _id: carId, userId }));
 			if (!vehicle) {
 				throw new Error("Vehicle not found");
 			}
@@ -201,7 +202,7 @@ class ServiceTrackerService {
 	 */
 	static async getServiceStatus(userId: string, carId: string): Promise<ServiceStatusItem[]> {
 		try {
-			const vehicle = await Vehicle.findOne({ _id: carId, userId });
+			const vehicle = await nullIfInvalidId(Vehicle.findOne({ _id: carId, userId }));
 			if (!vehicle) {
 				throw new Error("Vehicle not found");
 			}

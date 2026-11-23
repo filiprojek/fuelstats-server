@@ -1,5 +1,6 @@
 import Vehicle, { IVehicle } from "../models/Vehicle";
 import { Err, Succ } from "./globalService";
+import { nullIfInvalidId } from "../utils/objectId";
 
 /** DTO for creating a vehicle */
 export interface CreateVehicleDTO {
@@ -71,7 +72,7 @@ class VehicleService {
 	/** DTO for updating a vehicle */
 	static async update(id: string, userId: string, payload: Partial<Pick<IVehicle, "name" | "registrationPlate" | "fuelType" | "vin" | "note" | "isDefault">>): Promise<VehiclePayload> {
 		try {
-			const updated = await Vehicle.findOneAndUpdate({ _id: id, userId }, payload, { new: true });
+			const updated = await nullIfInvalidId(Vehicle.findOneAndUpdate({ _id: id, userId }, payload, { new: true }));
 
 			if (!updated) {
 				new Err(404, "Vehicle not found");
@@ -132,7 +133,7 @@ class VehicleService {
 	 */
 	static async getById(id: string, userId: string): Promise<VehiclePayload | null> {
 		try {
-			const vehicle = await Vehicle.findOne({ _id: id, userId });
+			const vehicle = await nullIfInvalidId(Vehicle.findOne({ _id: id, userId }));
 			if (!vehicle) {
 				new Err(404, "Vehicle not found", { id, userId });
 				return null;
@@ -191,7 +192,7 @@ class VehicleService {
 	 */
 	static async remove(id: string, userId: string): Promise<void> {
 		try {
-			const deleted = await Vehicle.findOneAndDelete({ _id: id, userId });
+			const deleted = await nullIfInvalidId(Vehicle.findOneAndDelete({ _id: id, userId }));
 
 			if (!deleted) {
 				// Vehicle does not exist or is owned by another user

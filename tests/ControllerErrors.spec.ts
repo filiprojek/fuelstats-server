@@ -1,7 +1,9 @@
 import request from "supertest";
 import jwt from "jsonwebtoken";
 import fs from "fs-extra";
+import { Types } from "mongoose";
 import { app } from "../src/app";
+import ServiceLog from "../src/models/ServiceLog";
 import env from "../src/config/environment";
 import RefuelService from "../src/services/RefuelService";
 import VehicleService from "../src/services/VehicleService";
@@ -87,6 +89,52 @@ describe("controller error handling", () => {
 	])("%s show returns 404 when missing", async (_label, url, service: any) => {
 		jest.spyOn(service, "getById").mockResolvedValue(null);
 		expect((await send("get", url)).status).toBe(404);
+	});
+
+	describe("ids that are not ObjectIds", () => {
+		// No database is connected: these requests only pass if the lookup gives up on the id without querying.
+		it.each<[Method, string, object | undefined, string]>([
+			["get", "/api/v1/vehicles/not-an-id", undefined, "Vehicle not found"],
+			["put", "/api/v1/vehicles/not-an-id", { name: "Car" }, "Vehicle not found"],
+			["delete", "/api/v1/vehicles/not-an-id", undefined, "Vehicle not found"],
+			["get", "/api/v1/refuels/not-an-id", undefined, "Refuel not found"],
+			["put", "/api/v1/refuels/not-an-id", { liters: 10 }, "Refuel not found"],
+			["delete", "/api/v1/refuels/not-an-id", undefined, "Refuel not found"],
+			["get", "/api/v1/services/not-an-id", undefined, "Service record not found"],
+			["put", "/api/v1/services/not-an-id", { cost: 10 }, "Service record not found"],
+			["delete", "/api/v1/services/not-an-id", undefined, "Service record not found"],
+			["get", "/api/v1/odometer/not-an-id", undefined, "Odometer record not found"],
+			["put", "/api/v1/odometer/not-an-id", { mileage: 1000 }, "Odometer record not found"],
+			["put", "/api/v1/odometer/not-an-id", { isStart: true }, "Odometer record not found"],
+			["delete", "/api/v1/odometer/not-an-id", undefined, "Odometer record not found"],
+			["get", "/api/v1/vehicles/not-an-id/service-intervals", undefined, "Vehicle not found or unauthorized"],
+			["post", "/api/v1/vehicles/not-an-id/service-intervals", { intervals: [] }, "Vehicle not found or unauthorized"],
+			["get", "/api/v1/vehicles/not-an-id/service-status", undefined, "Vehicle not found or unauthorized"],
+		])("%s %s returns 404", async (method, url, body, message) => {
+			jest.spyOn(ServiceLog, "deleteOne").mockResolvedValue({} as any);
+			jest.spyOn(ServiceTrackerService, "getLatestOdometer").mockResolvedValue(0);
+			const res = await send(method, url, body);
+			expect(res.status).toBe(404);
+			expect(res.body.message).toBe(message);
+		});
+
+		it("still reports invalid values in an update body as a failed update, not as not found", async () => {
+			const res = await send("put", `/api/v1/refuels/${new Types.ObjectId()}`, { liters: "lots" });
+			expect(res.status).toBe(500);
+		});
+
+		it.each([
+			["/api/v1/refuels/import?targetVehicleId=not-an-id", "vehicleId,fuelType,liters,pricePerLiter,totalPrice,mileage\n,diesel,1,1,1,1"],
+			["/api/v1/refuels/import?vehicleId=not-an-id", "vehicleId,fuelType,liters,pricePerLiter,totalPrice,mileage\n,diesel,1,1,1,1"],
+			["/api/v1/refuels/import", "vehicleId,fuelType,liters,pricePerLiter,totalPrice,mileage\nnot-an-id,diesel,1,1,1,1"],
+			["/api/v1/services/import?targetVehicleId=not-an-id", "vehicleId,serviceType,mileage,date\n,battery,1,2026-01-01"],
+			["/api/v1/services/import?vehicleId=not-an-id", "vehicleId,serviceType,mileage,date\n,battery,1,2026-01-01"],
+			["/api/v1/services/import", "vehicleId,serviceType,mileage,date\nnot-an-id,battery,1,2026-01-01"],
+		])("%s reports the vehicle as not found", async (url, csv) => {
+			const res = await send("post", url, { csv });
+			expect(res.status).toBe(400);
+			expect(res.body.message).toBe("Vehicle with ID not-an-id not found or not owned by user");
+		});
 	});
 
 	describe("validation", () => {

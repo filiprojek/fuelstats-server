@@ -2,6 +2,7 @@ import Refuel, { IRefuel } from "../models/Refuel";
 import { Err, Succ } from "./globalService";
 import { toCSV, parseCSV } from "../utils/csv";
 import { ImportMatcher } from "../utils/importMatcher";
+import { nullIfInvalidId } from "../utils/objectId";
 
 export const REFUEL_CSV_COLUMNS = ["id", "vehicleId", "fuelType", "note", "liters", "pricePerLiter", "totalPrice", "mileage", "date", "createdAt"];
 
@@ -77,7 +78,7 @@ class RefuelService {
 
 	static async getById(id: string, userId: string): Promise<RefuelPayload | null> {
 		try {
-			const refuel = await Refuel.findOne({ _id: id, userId });
+			const refuel = await nullIfInvalidId(Refuel.findOne({ _id: id, userId }));
 			if (!refuel) {
 				new Err(404, "Refuel not found", { id, userId });
 				return null;
@@ -135,7 +136,7 @@ class RefuelService {
 		payload: Partial<Pick<IRefuel, "vehicleId" | "fuelType" | "note" | "liters" | "pricePerLiter" | "totalPrice" | "mileage" | "date">>,
 	): Promise<RefuelPayload> {
 		try {
-			const updated = await Refuel.findOneAndUpdate({ _id: id, userId }, payload, { new: true });
+			const updated = await nullIfInvalidId(Refuel.findOneAndUpdate({ _id: id, userId }, payload, { new: true }));
 			if (!updated) {
 				new Err(404, "Refuel not found");
 				throw new Error("Refuel not found");
@@ -166,7 +167,7 @@ class RefuelService {
 
 	static async remove(id: string, userId: string): Promise<void> {
 		try {
-			const deleted = await Refuel.findOneAndDelete({ _id: id, userId });
+			const deleted = await nullIfInvalidId(Refuel.findOneAndDelete({ _id: id, userId }));
 			if (!deleted) {
 				new Err(404, `Refuel not found or not owned by user`, { id, userId });
 				throw new Error("Refuel not found");

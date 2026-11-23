@@ -5,6 +5,7 @@ import { Err, Succ } from "./globalService";
 import { toCSV, parseCSV } from "../utils/csv";
 import { exactCaseInsensitive } from "../utils/regex";
 import { ImportMatcher } from "../utils/importMatcher";
+import { nullIfInvalidId } from "../utils/objectId";
 import type { CsvImportResult } from "./RefuelService";
 
 export const SERVICE_RECORD_CSV_COLUMNS = ["id", "vehicleId", "serviceType", "customType", "itemName", "cost", "mileage", "shop", "selfService", "note", "photos", "date", "createdAt"];
@@ -160,7 +161,7 @@ class ServiceRecordService {
 
 	static async getById(id: string, userId: string): Promise<ServiceRecordPayload | null> {
 		try {
-			const record = await ServiceRecord.findOne({ _id: id, userId });
+			const record = await nullIfInvalidId(ServiceRecord.findOne({ _id: id, userId }));
 			if (!record) {
 				new Err(404, "Service record not found", { id, userId });
 				return null;
@@ -224,7 +225,7 @@ class ServiceRecordService {
 		payload: Partial<Pick<IServiceRecord, "vehicleId" | "serviceType" | "customType" | "itemName" | "cost" | "mileage" | "shop" | "selfService" | "note" | "photos" | "date">>,
 	): Promise<ServiceRecordPayload> {
 		try {
-			const updated = await ServiceRecord.findOneAndUpdate({ _id: id, userId }, payload, { new: true });
+			const updated = await nullIfInvalidId(ServiceRecord.findOneAndUpdate({ _id: id, userId }, payload, { new: true }));
 			if (!updated) {
 				new Err(404, "Service record not found");
 				throw new Error("Service record not found");
@@ -260,7 +261,7 @@ class ServiceRecordService {
 	static async remove(id: string, userId: string): Promise<void> {
 		try {
 			await deleteServiceLog(id);
-			const deleted = await ServiceRecord.findOneAndDelete({ _id: id, userId });
+			const deleted = await nullIfInvalidId(ServiceRecord.findOneAndDelete({ _id: id, userId }));
 			if (!deleted) {
 				new Err(404, "Service record not found or not owned by user", { id, userId });
 				throw new Error("Service record not found");

@@ -84,6 +84,10 @@ describe("VehicleService", () => {
 			expect(result).toBeNull();
 		});
 
+		it("returns null when the id is not a valid ObjectId", async () => {
+			await expect(VehicleService.getById("not-an-object-id", dto.userId)).resolves.toBeNull();
+		});
+
 		it("throws if the lookup fails", async () => {
 			const error = new Error("DB failure");
 			jest.spyOn(Vehicle, "findOne").mockRejectedValue(error);
