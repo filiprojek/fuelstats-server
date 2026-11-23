@@ -10,6 +10,14 @@ describe("csv utils", () => {
 			expect(toCSV([{ a: 1, b: "x" }, { a: 2, b: null }])).toBe("a,b\n1,x\n2,");
 		});
 
+		it("writes the given columns in order, leaving missing values empty and dropping other keys", () => {
+			expect(toCSV([{ b: 2, a: 1, extra: "x" }, { a: 3 }], ["a", "b", "c"])).toBe("a,b,c\n1,2,\n3,,");
+		});
+
+		it("writes only the header when there are no rows but columns are given", () => {
+			expect(toCSV([], ["a", "b"])).toBe("a,b");
+		});
+
 		it("quotes values containing separators, quotes and newlines", () => {
 			expect(toCSV([{ note: 'say "hi", ok' }, { note: "line1\nline2" }, { note: "cr\rhere" }])).toBe('note\n"say ""hi"", ok"\n"line1\nline2"\n"cr\rhere"');
 		});

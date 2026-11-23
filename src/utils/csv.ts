@@ -1,6 +1,6 @@
-export function toCSV(rows: Array<Record<string, any>>): string {
-	if (rows.length === 0) return "";
-	const headers = Object.keys(rows[0]);
+export function toCSV(rows: Array<Record<string, any>>, columns?: string[]): string {
+	const headers = columns ?? (rows.length > 0 ? Object.keys(rows[0]) : []);
+	if (headers.length === 0) return "";
 	const csvRows = [headers.join(",")];
 	for (const row of rows) {
 		const values = headers.map((header) => {

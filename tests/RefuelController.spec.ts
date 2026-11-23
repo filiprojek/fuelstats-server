@@ -325,22 +325,40 @@ describe("RefuelController – POST /api/v1/refuels/import", () => {
 	it("calls RefuelService.importCSV and returns 201 with imported records", async () => {
 		const csvData = "vehicleId,fuelType,note,liters,pricePerLiter,totalPrice,mileage\nveh1,petrol,note,10,1.2,12,1000";
 		const importedRecords = [{ id: "ref1", userId, vehicleId: "veh1" }];
-		const spy = jest.spyOn(RefuelService, "importCSV").mockResolvedValue(importedRecords as any);
+		const spy = jest.spyOn(RefuelService, "importCSV").mockResolvedValue({ records: importedRecords, skipped: 0 } as any);
 
 		const res = await request(app).post("/api/v1/refuels/import").set("Authorization", `Bearer ${token}`).set("Content-Type", "text/csv").send(csvData);
 
-		expect(spy).toHaveBeenCalledWith(userId, csvData, undefined);
+		expect(spy).toHaveBeenCalledWith(userId, csvData, undefined, undefined);
 		expect(res.status).toBe(201);
+		expect(res.body.message).toBe("Successfully imported 1 refuel records");
 		expect(res.body.count).toBe(1);
+		expect(res.body.skipped).toBe(0);
 		expect(res.body.records).toEqual(importedRecords);
+	});
+
+	it("forwards vehicleId and targetVehicleId and reports skipped rows", async () => {
+		const importedRecords = [{ id: "rec1", userId, vehicleId: "veh2" }];
+		const spy = jest.spyOn(RefuelService, "importCSV").mockResolvedValue({ records: importedRecords, skipped: 3 } as any);
+
+		const res = await request(app).post("/api/v1/refuels/import?vehicleId=veh1&targetVehicleId=veh2").set("Authorization", `Bearer ${token}`).set("Content-Type", "text/csv").send("a,b\n1,2");
+
+		expect(spy).toHaveBeenCalledWith(userId, "a,b\n1,2", "veh1", "veh2");
+		expect(res.status).toBe(201);
+		expect(res.body).toEqual({
+			message: "Successfully imported 1 refuel records (3 skipped as already present)",
+			count: 1,
+			skipped: 3,
+			records: importedRecords,
+		});
 	});
 
 	it("supports JSON body containing csv field", async () => {
 		const csvData = "vehicleId,fuelType,note,liters,pricePerLiter,totalPrice,mileage\nveh1,petrol,note,10,1.2,12,1000";
-		const spy = jest.spyOn(RefuelService, "importCSV").mockResolvedValue([]);
+		const spy = jest.spyOn(RefuelService, "importCSV").mockResolvedValue({ records: [], skipped: 0 });
 
 		await request(app).post("/api/v1/refuels/import").set("Authorization", `Bearer ${token}`).send({ csv: csvData });
 
-		expect(spy).toHaveBeenCalledWith(userId, csvData, undefined);
+		expect(spy).toHaveBeenCalledWith(userId, csvData, undefined, undefined);
 	});
 });

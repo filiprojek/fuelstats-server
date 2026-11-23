@@ -1,6 +1,14 @@
 import Refuel, { IRefuel } from "../models/Refuel";
 import { Err, Succ } from "./globalService";
 import { toCSV, parseCSV } from "../utils/csv";
+import { ImportMatcher } from "../utils/importMatcher";
+
+export const REFUEL_CSV_COLUMNS = ["id", "vehicleId", "fuelType", "note", "liters", "pricePerLiter", "totalPrice", "mileage", "date", "createdAt"];
+
+export interface CsvImportResult<T> {
+	records: T[];
+	skipped: number;
+}
 
 export interface CreateRefuelDTO {
 	userId: string;
@@ -192,29 +200,50 @@ class RefuelService {
 				date: r.date ? r.date.toISOString() : r.createdAt.toISOString(),
 				createdAt: r.createdAt.toISOString(),
 			}));
-			return toCSV(rows);
+			return toCSV(rows, REFUEL_CSV_COLUMNS);
 		} catch (err: any) {
 			new Err(500, "Refuel export CSV failed", err);
 			throw err;
 		}
 	}
 
-	static async importCSV(userId: string, csvContent: string, defaultVehicleId?: string): Promise<RefuelPayload[]> {
+	/**
+	 * Import refuels from CSV.
+	 * - `targetVehicleId` (if given) overrides the vehicleId of every row.
+	 * - Otherwise each row's vehicleId is used, falling back to `defaultVehicleId`.
+	 * - Rows already present in the vehicle are skipped: same `id` (an export of this vehicle),
+	 *   or same fuel type, liters, total price and mileage (e.g. a file imported before).
+	 */
+	static async importCSV(userId: string, csvContent: string, defaultVehicleId?: string, targetVehicleId?: string): Promise<CsvImportResult<RefuelPayload>> {
 		try {
 			const parsedRows = parseCSV(csvContent);
 			const importedPayloads: RefuelPayload[] = [];
+			let skipped = 0;
+			const matcher = new ImportMatcher(Refuel);
 			const VehicleService = require("./VehicleService").default;
 
+			if (targetVehicleId && !(await VehicleService.getById(targetVehicleId, userId))) {
+				throw new Error(`Vehicle with ID ${targetVehicleId} not found or not owned by user`);
+			}
+
 			for (const row of parsedRows) {
-				const rowVehicleId = row.vehicleId || defaultVehicleId;
+				const rowVehicleId = targetVehicleId || row.vehicleId || defaultVehicleId;
 				if (!rowVehicleId) {
 					throw new Error("Missing vehicleId. Provide a default vehicleId or include it in the CSV rows.");
 				}
 
-				// Verify ownership of the vehicle
-				const vehicle = await VehicleService.getById(rowVehicleId, userId);
-				if (!vehicle) {
-					throw new Error(`Vehicle with ID ${rowVehicleId} not found or not owned by user`);
+				// Verify ownership of the vehicle (target vehicle was verified above)
+				if (!targetVehicleId) {
+					const vehicle = await VehicleService.getById(rowVehicleId, userId);
+					if (!vehicle) {
+						throw new Error(`Vehicle with ID ${rowVehicleId} not found or not owned by user`);
+					}
+				}
+
+				// Same record as an earlier export of this vehicle, even if it was edited since
+				if (await matcher.takeById(row.id, { userId, vehicleId: rowVehicleId })) {
+					skipped++;
+					continue;
 				}
 
 				if (!row.fuelType) {
@@ -233,6 +262,20 @@ class RefuelService {
 					throw new Error("Invalid or missing mileage in CSV row");
 				}
 
+				// Same refuel already in this vehicle, e.g. the file was imported into it before
+				const sameRefuel = {
+					userId,
+					vehicleId: rowVehicleId,
+					fuelType: row.fuelType,
+					liters: Number(row.liters),
+					totalPrice: Number(row.totalPrice),
+					mileage: Number(row.mileage),
+				};
+				if (await matcher.takeMatch(sameRefuel)) {
+					skipped++;
+					continue;
+				}
+
 				const refuel = new Refuel({
 					userId,
 					vehicleId: rowVehicleId,
@@ -247,6 +290,7 @@ class RefuelService {
 				} as Partial<IRefuel>);
 
 				await refuel.save();
+				matcher.created(refuel._id);
 
 				importedPayloads.push({
 					id: refuel.id,
@@ -263,8 +307,8 @@ class RefuelService {
 				});
 			}
 
-			new Succ(201, `Imported ${importedPayloads.length} refuel records`, importedPayloads);
-			return importedPayloads;
+			new Succ(201, `Imported ${importedPayloads.length} refuel records, skipped ${skipped}`, importedPayloads);
+			return { records: importedPayloads, skipped };
 		} catch (err: any) {
 			new Err(400, "Refuel CSV import failed", err.message);
 			throw err;

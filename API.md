@@ -462,6 +462,20 @@ curl http://localhost:3000/api/v1/refuels/export?vehicleId=VEHICLE_ID \
 ### POST /api/v1/refuels/import
 Import refuel records from CSV. Optional `vehicleId` query parameter acts as the fallback vehicle if row-level `vehicleId` is omitted. Accepts raw CSV text body or JSON body with a `csv` property.
 
+Optional `targetVehicleId` query parameter imports every row into that vehicle, ignoring the row-level `vehicleId` (use it to copy an export of one vehicle into another).
+
+Rows already present in the vehicle are skipped and counted in `skipped`: a row whose `id` belongs to a record of that vehicle (e.g. re-importing its own export, even after edits), or a row with the same fuel type, liters, total price and mileage as an existing record (e.g. importing the same file twice). Identical rows within one file are all imported.
+
+**Response 201**
+```json
+{
+  "message": "Successfully imported 1 refuel records (2 skipped as already present)",
+  "count": 1,
+  "skipped": 2,
+  "records": [ ... ]
+}
+```
+
 **Body (Raw CSV)**
 ```csv
 vehicleId,fuelType,note,liters,pricePerLiter,totalPrice,mileage
@@ -481,6 +495,14 @@ curl -X POST http://localhost:3000/api/v1/refuels/import \
   -H "Authorization: Bearer TOKEN" \
   -H "Content-Type: text/csv" \
   --data-binary @refuels.csv
+```
+
+Copy an export of another vehicle into `VEHICLE_ID`:
+```bash
+curl -X POST "http://localhost:3000/api/v1/refuels/import?targetVehicleId=VEHICLE_ID" \
+  -H "Authorization: Bearer TOKEN" \
+  -H "Content-Type: text/csv" \
+  --data-binary @refuels-export.csv
 ```
 
 
@@ -630,6 +652,20 @@ curl http://localhost:3000/api/v1/services/export?vehicleId=VEHICLE_ID \
 
 ### POST /api/v1/services/import
 Import service records from CSV. Optional `vehicleId` query parameter acts as the fallback vehicle if row-level `vehicleId` is omitted. Accepts raw CSV text body or JSON body with a `csv` property.
+
+Optional `targetVehicleId` query parameter imports every row into that vehicle, ignoring the row-level `vehicleId` (use it to copy an export of one vehicle into another).
+
+Rows already present in the vehicle are skipped and counted in `skipped`: a row whose `id` belongs to a record of that vehicle (e.g. re-importing its own export, even after edits), or a row with the same service type, custom type, item name, cost, mileage and date as an existing record (e.g. importing the same file twice). Identical rows within one file are all imported.
+
+**Response 201**
+```json
+{
+  "message": "Successfully imported 1 service records (2 skipped as already present)",
+  "count": 1,
+  "skipped": 2,
+  "records": [ ... ]
+}
+```
 
 **Body (Raw CSV)**
 ```csv

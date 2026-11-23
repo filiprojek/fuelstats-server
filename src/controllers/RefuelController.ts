@@ -119,6 +119,7 @@ class RefuelController {
 		try {
 			const userId = (req as any).user.sub as string;
 			const defaultVehicleId = req.query.vehicleId as string | undefined;
+			const targetVehicleId = req.query.targetVehicleId as string | undefined;
 
 			let csvContent = "";
 			if (typeof req.body === "string") {
@@ -129,8 +130,9 @@ class RefuelController {
 				return res.status(400).json({ message: "Invalid CSV content. Provide raw text or a JSON body with a 'csv' property." });
 			}
 
-			const records = await RefuelService.importCSV(userId, csvContent, defaultVehicleId);
-			return res.status(201).json({ message: `Successfully imported ${records.length} refuel records`, count: records.length, records });
+			const { records, skipped } = await RefuelService.importCSV(userId, csvContent, defaultVehicleId, targetVehicleId);
+			const skippedNote = skipped > 0 ? ` (${skipped} skipped as already present)` : "";
+			return res.status(201).json({ message: `Successfully imported ${records.length} refuel records${skippedNote}`, count: records.length, skipped, records });
 		} catch (err: any) {
 			const status = err.status || 400;
 			return res.status(status).json({ message: err.message || "CSV import failed" });

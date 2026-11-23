@@ -1,19 +1,21 @@
+import { Types } from "mongoose";
 import ServiceRecord from "../src/models/ServiceRecord";
 import ServiceTask from "../src/models/ServiceTask";
 import ServiceLog from "../src/models/ServiceLog";
-import ServiceRecordService from "../src/services/ServiceRecordService";
+import ServiceRecordService, { SERVICE_RECORD_CSV_COLUMNS } from "../src/services/ServiceRecordService";
 import VehicleService from "../src/services/VehicleService";
+import { fakeStore } from "./helpers/fakeStore";
 
 describe("ServiceRecordService CSV and log sync", () => {
 	let taskQueries: any[];
+	let store: ReturnType<typeof fakeStore>;
+	let getById: jest.SpyInstance;
 
 	beforeEach(() => {
 		taskQueries = [];
 		jest.spyOn(console, "error").mockImplementation(() => {});
-		jest.spyOn(VehicleService, "getById").mockImplementation(async (id: string) => (id === "v1" ? ({ id } as any) : null));
-		jest.spyOn(ServiceRecord.prototype, "save").mockImplementation(function (this: any) {
-			return Promise.resolve(this);
-		});
+		getById = jest.spyOn(VehicleService, "getById").mockImplementation(async (id: string) => (id === "v1" || id === "v2" ? ({ id } as any) : null));
+		store = fakeStore(ServiceRecord);
 		jest.spyOn(ServiceTask, "findOne").mockImplementation(((q: any) => {
 			taskQueries.push(q);
 			return Promise.resolve(null);
@@ -67,9 +69,9 @@ describe("ServiceRecordService CSV and log sync", () => {
 			expect(lines[2]).toContain("s2,v1,repair,,,0,1,,false,,,");
 		});
 
-		it("exports all vehicles and rethrows errors", async () => {
+		it("exports all vehicles, keeps the header when there are no records, and rethrows errors", async () => {
 			const find = jest.spyOn(ServiceRecord, "find").mockReturnValue({ sort: jest.fn().mockResolvedValue([]) } as any);
-			await ServiceRecordService.exportCSV("u");
+			await expect(ServiceRecordService.exportCSV("u")).resolves.toBe(SERVICE_RECORD_CSV_COLUMNS.join(","));
 			expect(find).toHaveBeenCalledWith({ userId: "u" });
 			find.mockReturnValue({ sort: jest.fn().mockRejectedValue(new Error("db")) } as any);
 			await expect(ServiceRecordService.exportCSV("u")).rejects.toThrow("db");
@@ -79,7 +81,11 @@ describe("ServiceRecordService CSV and log sync", () => {
 	describe("importCSV", () => {
 		it("imports English headers and syncs the service log", async () => {
 			const csv = "vehicleId,serviceType,cost,mileage,date,note,shop,selfService,photos,itemName,customType\nv1,engine-oil,2500,10000,2026-01-02,oil change,Garage,true,a.jpg; b.jpg,Castrol,";
-			const [record] = await ServiceRecordService.importCSV("u", csv);
+			const {
+				records: [record],
+				skipped,
+			} = await ServiceRecordService.importCSV("u", csv);
+			expect(skipped).toBe(0);
 
 			expect(record).toMatchObject({
 				vehicleId: "v1",
@@ -104,7 +110,9 @@ describe("ServiceRecordService CSV and log sync", () => {
 
 		it("imports Czech headers with d.m.yyyy dates into the default vehicle", async () => {
 			const csv = "servisní úkon,Cena,stav tachometru,datum,Poznámka,kód servisu/poskytovatel\ncabin-filter,,52000,5.3.2025,pyl,Servis XY";
-			const [record] = await ServiceRecordService.importCSV("u", csv, "v1");
+			const {
+				records: [record],
+			} = await ServiceRecordService.importCSV("u", csv, "v1");
 			expect(record).toMatchObject({ vehicleId: "v1", serviceType: "cabin-filter", cost: 0, mileage: 52000, note: "pyl", shop: "Servis XY", selfService: false, photos: [] });
 			expect(record.date).toEqual(new Date(Date.UTC(2025, 2, 5)));
 			expect(taskQueries[0].name.$regex.test("Výměna kabinového (mikro)filtru")).toBe(true);
@@ -142,7 +150,112 @@ describe("ServiceRecordService CSV and log sync", () => {
 
 		it("does not fail the import when log sync fails", async () => {
 			(ServiceLog.findOneAndUpdate as jest.Mock).mockRejectedValue(new Error("log db"));
-			await expect(ServiceRecordService.importCSV("u", "vehicleId,serviceType,mileage,date\nv1,battery,1,2026-01-01")).resolves.toHaveLength(1);
+			await expect(ServiceRecordService.importCSV("u", "vehicleId,serviceType,mileage,date\nv1,battery,1,2026-01-01")).resolves.toMatchObject({ records: [expect.anything()], skipped: 0 });
+		});
+
+		describe("target vehicle", () => {
+			it("imports every row into the target vehicle, ignoring the row vehicle and the default", async () => {
+				const csv = "vehicleId,serviceType,mileage,date\nother,battery,1,2026-01-01\n,repair,2,2026-01-02";
+				const { records } = await ServiceRecordService.importCSV("u", csv, "v1", "v2");
+				expect(records.map((r) => r.vehicleId)).toEqual(["v2", "v2"]);
+				expect(getById).toHaveBeenCalledTimes(1);
+				expect(getById).toHaveBeenCalledWith("v2", "u");
+				expect(ServiceLog.findOneAndUpdate).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ carId: "v2" }), expect.anything());
+			});
+
+			it("rejects a target vehicle the user does not own before importing anything", async () => {
+				const csv = "vehicleId,serviceType,mileage,date\nv1,battery,1,2026-01-01";
+				await expect(ServiceRecordService.importCSV("u", csv, undefined, "other")).rejects.toThrow("Vehicle with ID other not found or not owned by user");
+				expect(store.docs).toHaveLength(0);
+			});
+		});
+
+		describe("skipping rows already present", () => {
+			const exportHeader = SERVICE_RECORD_CSV_COLUMNS.join(",");
+			const existingId = new Types.ObjectId().toString();
+			const existing = {
+				_id: existingId,
+				userId: "u",
+				vehicleId: "v1",
+				serviceType: "engine-oil",
+				itemName: "Castrol",
+				cost: 2500,
+				mileage: 10000,
+				date: new Date("2026-01-02T00:00:00.000Z"),
+			};
+			const exportedRow = (id: string) => `${id},v1,engine-oil,,Castrol,2500,10000,,false,,,2026-01-02T00:00:00.000Z,`;
+
+			it("skips a row whose id exists in the same vehicle, even if it was edited since the export, without touching the service log", async () => {
+				store.seed({ ...existing, cost: 2700 });
+				const { records, skipped } = await ServiceRecordService.importCSV("u", `${exportHeader}\n${exportedRow(existingId)}`);
+				expect(records).toHaveLength(0);
+				expect(skipped).toBe(1);
+				expect(store.docs).toHaveLength(1);
+				expect(ServiceLog.findOneAndUpdate).not.toHaveBeenCalled();
+			});
+
+			it("copies a row whose id belongs to another vehicle into the target vehicle", async () => {
+				store.seed(existing);
+				const { records, skipped } = await ServiceRecordService.importCSV("u", `${exportHeader}\n${exportedRow(existingId)}`, undefined, "v2");
+				expect(skipped).toBe(0);
+				expect(records).toHaveLength(1);
+				expect(records[0]).toMatchObject({ vehicleId: "v2", itemName: "Castrol" });
+				expect(records[0].id).not.toBe(existingId);
+			});
+
+			it("does not import the same file into the target vehicle twice", async () => {
+				const csv = [exportHeader, exportedRow(new Types.ObjectId().toString()), `${new Types.ObjectId()},v1,repair,,,0,12000,,false,,,2026-03-01T00:00:00.000Z,`].join("\n");
+
+				const first = await ServiceRecordService.importCSV("u", csv, undefined, "v2");
+				const second = await ServiceRecordService.importCSV("u", csv, undefined, "v2");
+
+				expect(first).toMatchObject({ skipped: 0, records: [{ serviceType: "engine-oil" }, { serviceType: "repair" }] });
+				expect(second).toEqual({ records: [], skipped: 2 });
+				expect(store.docs).toHaveLength(2);
+			});
+
+			it("skips rows of a Czech file imported a second time", async () => {
+				const csv = "servisní úkon,Cena,stav tachometru,datum,Poznámka\ncabin-filter,,52000,5.3.2025,pyl\nbattery,3200,53000,1.6.2025,";
+				await ServiceRecordService.importCSV("u", csv, "v1");
+				const { records, skipped } = await ServiceRecordService.importCSV("u", csv, "v1");
+				expect(records).toHaveLength(0);
+				expect(skipped).toBe(2);
+			});
+
+			it("treats records that differ in item name, custom type, cost, mileage or date as distinct", async () => {
+				store.seed(existing);
+				const csv = [
+					"vehicleId,serviceType,customType,itemName,cost,mileage,date",
+					"v1,engine-oil,,Mobil,2500,10000,2026-01-02T00:00:00.000Z",
+					"v1,engine-oil,,,2500,10000,2026-01-02T00:00:00.000Z",
+					"v1,engine-oil,extra,Castrol,2500,10000,2026-01-02T00:00:00.000Z",
+					"v1,engine-oil,,Castrol,2600,10000,2026-01-02T00:00:00.000Z",
+					"v1,engine-oil,,Castrol,2500,10001,2026-01-02T00:00:00.000Z",
+					"v1,engine-oil,,Castrol,2500,10000,2026-01-03T00:00:00.000Z",
+					"v1,engine-oil,,Castrol,2500,10000,2026-01-02T00:00:00.000Z",
+				].join("\n");
+				const { records, skipped } = await ServiceRecordService.importCSV("u", csv);
+				expect(records).toHaveLength(6);
+				expect(skipped).toBe(1);
+			});
+
+			it("imports identical rows of one file, and on a repeat import matches each existing record only once", async () => {
+				const header = "vehicleId,serviceType,itemName,cost,mileage,date";
+				const row = "v1,tires,Winter tyre,3000,40000,2026-10-01";
+				const first = await ServiceRecordService.importCSV("u", `${header}\n${row}\n${row}`);
+				expect(first.records).toHaveLength(2);
+
+				const second = await ServiceRecordService.importCSV("u", `${header}\n${row}\n${row}\n${row}`);
+				expect(second.skipped).toBe(2);
+				expect(second.records).toHaveLength(1);
+				expect(store.docs).toHaveLength(3);
+			});
+
+			it("ignores ids that are not ObjectIds", async () => {
+				const { records, skipped } = await ServiceRecordService.importCSV("u", `${exportHeader}\n${exportedRow("s1")}`);
+				expect(skipped).toBe(0);
+				expect(records).toHaveLength(1);
+			});
 		});
 
 		it.each([

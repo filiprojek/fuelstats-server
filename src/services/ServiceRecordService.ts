@@ -4,6 +4,10 @@ import ServiceLog from "../models/ServiceLog";
 import { Err, Succ } from "./globalService";
 import { toCSV, parseCSV } from "../utils/csv";
 import { exactCaseInsensitive } from "../utils/regex";
+import { ImportMatcher } from "../utils/importMatcher";
+import type { CsvImportResult } from "./RefuelService";
+
+export const SERVICE_RECORD_CSV_COLUMNS = ["id", "vehicleId", "serviceType", "customType", "itemName", "cost", "mileage", "shop", "selfService", "note", "photos", "date", "createdAt"];
 
 async function syncServiceLog(record: any) {
 	try {
@@ -293,29 +297,50 @@ class ServiceRecordService {
 				date: r.date.toISOString(),
 				createdAt: r.createdAt.toISOString(),
 			}));
-			return toCSV(rows);
+			return toCSV(rows, SERVICE_RECORD_CSV_COLUMNS);
 		} catch (err: any) {
 			new Err(500, "Service record export CSV failed", err);
 			throw err;
 		}
 	}
 
-	static async importCSV(userId: string, csvContent: string, defaultVehicleId?: string): Promise<ServiceRecordPayload[]> {
+	/**
+	 * Import service records from CSV.
+	 * - `targetVehicleId` (if given) overrides the vehicleId of every row.
+	 * - Otherwise each row's vehicleId is used, falling back to `defaultVehicleId`.
+	 * - Rows already present in the vehicle are skipped: same `id` (an export of this vehicle),
+	 *   or same service type, custom type, item name, cost, mileage and date (e.g. a file imported before).
+	 */
+	static async importCSV(userId: string, csvContent: string, defaultVehicleId?: string, targetVehicleId?: string): Promise<CsvImportResult<ServiceRecordPayload>> {
 		try {
 			const parsedRows = parseCSV(csvContent);
 			const importedPayloads: ServiceRecordPayload[] = [];
+			let skipped = 0;
+			const matcher = new ImportMatcher(ServiceRecord);
 			const VehicleService = require("./VehicleService").default;
 
+			if (targetVehicleId && !(await VehicleService.getById(targetVehicleId, userId))) {
+				throw new Error(`Vehicle with ID ${targetVehicleId} not found or not owned by user`);
+			}
+
 			for (const row of parsedRows) {
-				const rowVehicleId = row.vehicleId || defaultVehicleId;
+				const rowVehicleId = targetVehicleId || row.vehicleId || defaultVehicleId;
 				if (!rowVehicleId) {
 					throw new Error("Missing vehicleId. Provide a default vehicleId or include it in the CSV rows.");
 				}
 
-				// Verify ownership of the vehicle
-				const vehicle = await VehicleService.getById(rowVehicleId, userId);
-				if (!vehicle) {
-					throw new Error(`Vehicle with ID ${rowVehicleId} not found or not owned by user`);
+				// Verify ownership of the vehicle (target vehicle was verified above)
+				if (!targetVehicleId) {
+					const vehicle = await VehicleService.getById(rowVehicleId, userId);
+					if (!vehicle) {
+						throw new Error(`Vehicle with ID ${rowVehicleId} not found or not owned by user`);
+					}
+				}
+
+				// Same record as an earlier export of this vehicle, even if it was edited since
+				if (await matcher.takeById(row.id, { userId, vehicleId: rowVehicleId })) {
+					skipped++;
+					continue;
 				}
 
 				// Dynamic property mapping for English and Czech headers
@@ -346,8 +371,30 @@ class ServiceRecordService {
 				}
 
 				const parsedDate = parseFlexibleDate(rowDate);
+
+				// Same service already in this vehicle, e.g. the file was imported into it before
+				const sameService = {
+					userId,
+					vehicleId: rowVehicleId,
+					serviceType: rowServiceType,
+					customType: row.customType || null,
+					itemName: row.itemName || null,
+					cost: costVal,
+					mileage: Number(rowMileage),
+					date: parsedDate,
+				};
+				if (await matcher.takeMatch(sameService)) {
+					skipped++;
+					continue;
+				}
+
 				const selfService = row.selfService === "true" || row.selfService === "1";
-				const photos = row.photos ? row.photos.split(";").map((p) => p.trim()).filter((p) => p) : [];
+				const photos = row.photos
+					? row.photos
+							.split(";")
+							.map((p) => p.trim())
+							.filter((p) => p)
+					: [];
 
 				const record = new ServiceRecord({
 					userId,
@@ -366,6 +413,7 @@ class ServiceRecordService {
 				} as Partial<IServiceRecord>);
 
 				await record.save();
+				matcher.created(record._id);
 				await syncServiceLog(record);
 
 				importedPayloads.push({
@@ -386,8 +434,8 @@ class ServiceRecordService {
 				});
 			}
 
-			new Succ(201, `Imported ${importedPayloads.length} service records`, importedPayloads);
-			return importedPayloads;
+			new Succ(201, `Imported ${importedPayloads.length} service records, skipped ${skipped}`, importedPayloads);
+			return { records: importedPayloads, skipped };
 		} catch (err: any) {
 			new Err(400, "Service record CSV import failed", err.message);
 			throw err;

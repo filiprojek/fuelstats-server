@@ -106,10 +106,13 @@ describe("controller error handling", () => {
 			["/api/v1/refuels/import", RefuelService],
 			["/api/v1/services/import", ServiceRecordService],
 		])("%s accepts a JSON csv property and reports import errors", async (url, service: any) => {
-			const spy = jest.spyOn(service, "importCSV").mockResolvedValueOnce([{}]).mockRejectedValueOnce(new Error("Missing fuelType in CSV row"));
+			const spy = jest
+				.spyOn(service, "importCSV")
+				.mockResolvedValueOnce({ records: [{}], skipped: 0 })
+				.mockRejectedValueOnce(new Error("Missing fuelType in CSV row"));
 			const ok = await send("post", `${url}?vehicleId=v1`, { csv: "a,b\n1,2" });
 			expect(ok.status).toBe(201);
-			expect(spy).toHaveBeenCalledWith("u1", "a,b\n1,2", "v1");
+			expect(spy).toHaveBeenCalledWith("u1", "a,b\n1,2", "v1", undefined);
 			const bad = await send("post", url, { csv: "x" });
 			expect(bad.status).toBe(400);
 			expect(bad.body.message).toBe("Missing fuelType in CSV row");
