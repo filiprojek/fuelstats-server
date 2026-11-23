@@ -1,14 +1,15 @@
-import path from "path";
-import fs from "fs-extra";
-import { Err } from "../services/globalService";
 import dotenv from "dotenv";
+import fs from "fs-extra";
+import path from "path";
+import { Err } from "../services/globalService";
+
 const env_path = process.env.NODE_ENV ? `../.env.${process.env.NODE_ENV}` : "../.env";
 
 dotenv.config({ path: path.join(__dirname, env_path) });
 const norkcfg = fs.readJSONSync(path.join(__dirname, "../../norkconfig.json"));
 
 if (norkcfg.database) {
-	if (norkcfg.database.db == "postgresql") {
+	if (norkcfg.database.db === "postgresql") {
 		if (!process.env.DB_PORT) {
 			process.env.DB_PORT = "5432";
 		}
@@ -45,7 +46,7 @@ if (process.env.NODE_ENV === "test") {
 	process.env.JWT_SECRET = process.env.JWT_SECRET || "testsecret";
 }
 
-if (process.env.JWT_SECRET === undefined || process.env.JWT_SECRET == "") {
+if (process.env.JWT_SECRET === undefined || process.env.JWT_SECRET === "") {
 	new Err(500, "JWT_SECRET is not set!");
 	throw new Error("JWT_SECRET is not set!");
 }

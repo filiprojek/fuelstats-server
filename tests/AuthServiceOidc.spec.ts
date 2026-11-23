@@ -1,8 +1,8 @@
 import jwt from "jsonwebtoken";
-import AuthService from "../src/services/AuthService";
-import User from "../src/models/User";
 import env from "../src/config/environment";
-import { OidcProviderConfig } from "../src/config/oidc";
+import type { OidcProviderConfig } from "../src/config/oidc";
+import User from "../src/models/User";
+import AuthService from "../src/services/AuthService";
 
 const provider: OidcProviderConfig = {
 	id: "authelia",
@@ -59,7 +59,10 @@ describe("AuthService OIDC", () => {
 
 		it("auto-links to an existing account when the email is verified", async () => {
 			const user = userDoc();
-			const findOne = jest.spyOn(User, "findOne").mockResolvedValueOnce(null).mockResolvedValueOnce(user as any);
+			const findOne = jest
+				.spyOn(User, "findOne")
+				.mockResolvedValueOnce(null)
+				.mockResolvedValueOnce(user as any);
 
 			const result = await AuthService.loginWithOidc(provider, claims);
 
@@ -83,7 +86,9 @@ describe("AuthService OIDC", () => {
 
 		it("refuses to link when the email is not verified", async () => {
 			const user = userDoc();
-			jest.spyOn(User, "findOne").mockResolvedValueOnce(null).mockResolvedValueOnce(user as any);
+			jest.spyOn(User, "findOne")
+				.mockResolvedValueOnce(null)
+				.mockResolvedValueOnce(user as any);
 
 			await expect(AuthService.loginWithOidc(provider, { ...claims, email_verified: false })).rejects.toMatchObject({
 				status: 409,

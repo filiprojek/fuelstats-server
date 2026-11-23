@@ -1,4 +1,4 @@
-import { Schema, model, Document } from "mongoose";
+import { type Document, model, Schema } from "mongoose";
 
 export interface IOdometerRecord extends Document {
 	userId: string;
@@ -39,7 +39,7 @@ const odometerRecordSchema = new Schema<IOdometerRecord>(
 			default: false,
 		},
 	},
-	{ timestamps: { createdAt: true, updatedAt: false } }
+	{ timestamps: { createdAt: true, updatedAt: false } },
 );
 
 const OdometerRecord = model<IOdometerRecord>("OdometerRecord", odometerRecordSchema);

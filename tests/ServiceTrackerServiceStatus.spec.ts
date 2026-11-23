@@ -1,12 +1,12 @@
 import mongoose from "mongoose";
-import ServiceTrackerService from "../src/services/ServiceTrackerService";
-import ServiceTask from "../src/models/ServiceTask";
+import OdometerRecord from "../src/models/OdometerRecord";
+import Refuel from "../src/models/Refuel";
 import ServiceInterval from "../src/models/ServiceInterval";
 import ServiceLog from "../src/models/ServiceLog";
 import ServiceRecord from "../src/models/ServiceRecord";
+import ServiceTask from "../src/models/ServiceTask";
 import Vehicle from "../src/models/Vehicle";
-import Refuel from "../src/models/Refuel";
-import OdometerRecord from "../src/models/OdometerRecord";
+import ServiceTrackerService from "../src/services/ServiceTrackerService";
 
 const DAY = 86400000;
 const daysFromNow = (d: number) => new Date(Date.now() + d * DAY);
@@ -36,9 +36,9 @@ describe("ServiceTrackerService – detailed behaviour", () => {
 		jest.spyOn(ServiceTrackerService, "listServiceTasks").mockResolvedValue(tasks);
 		jest.spyOn(ServiceTask, "find").mockResolvedValue(tasks as any);
 		jest.spyOn(ServiceLog, "findOne").mockImplementation(((filter: any) =>
-			q(filter.serviceTaskId ? logs[filter.serviceTaskId] ?? null : latest.log !== undefined ? { odometer: latest.log } : null)) as any);
+			q(filter.serviceTaskId ? (logs[filter.serviceTaskId] ?? null) : latest.log !== undefined ? { odometer: latest.log } : null)) as any);
 		jest.spyOn(ServiceRecord, "findOne").mockImplementation(((filter: any) =>
-			q(filter.$or ? records[filter.$or[1].serviceType] ?? null : latest.record !== undefined ? { mileage: latest.record } : null)) as any);
+			q(filter.$or ? (records[filter.$or[1].serviceType] ?? null) : latest.record !== undefined ? { mileage: latest.record } : null)) as any);
 		jest.spyOn(Refuel, "findOne").mockImplementation((() => q(latest.refuel !== undefined ? { mileage: latest.refuel } : null)) as any);
 		jest.spyOn(OdometerRecord, "findOne").mockImplementation((() => q(latest.odo !== undefined ? { mileage: latest.odo } : null)) as any);
 	});
@@ -196,7 +196,10 @@ describe("ServiceTrackerService.listServiceTasks", () => {
 		const save = jest.spyOn(mongoose.Model.prototype, "save").mockImplementation(function (this: any) {
 			return Promise.resolve(this);
 		});
-		const find = jest.spyOn(ServiceTask, "find").mockResolvedValueOnce([]).mockResolvedValueOnce([{ id: "x" }] as any);
+		const find = jest
+			.spyOn(ServiceTask, "find")
+			.mockResolvedValueOnce([])
+			.mockResolvedValueOnce([{ id: "x" }] as any);
 		await expect(ServiceTrackerService.listServiceTasks()).resolves.toEqual([{ id: "x" }]);
 		expect(save).toHaveBeenCalled();
 		expect(find).toHaveBeenCalledTimes(2);

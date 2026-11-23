@@ -1,4 +1,4 @@
-import { loadOidcProviders, getOidcProvider, oidcCallbackUrl } from "../src/config/oidc";
+import { getOidcProvider, loadOidcProviders, oidcCallbackUrl } from "../src/config/oidc";
 
 describe("loadOidcProviders", () => {
 	const base = {

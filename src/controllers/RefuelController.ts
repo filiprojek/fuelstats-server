@@ -1,6 +1,6 @@
-import { Request, Response } from "express";
-import RefuelService from "../services/RefuelService";
+import type { Request, Response } from "express";
 import { Err, Succ } from "../services/globalService";
+import RefuelService from "../services/RefuelService";
 
 class RefuelController {
 	static async create(req: Request, res: Response): Promise<Response> {

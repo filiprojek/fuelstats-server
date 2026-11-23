@@ -1,6 +1,6 @@
-import { Request, Response } from "express";
-import OdometerService from "../services/OdometerService";
+import type { Request, Response } from "express";
 import { Err } from "../services/globalService";
+import OdometerService from "../services/OdometerService";
 
 const isTrue = (v: unknown) => v === true || v === "true";
 

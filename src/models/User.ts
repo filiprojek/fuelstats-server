@@ -1,5 +1,5 @@
+import { model, Schema } from "mongoose";
 import path from "path";
-import { Schema, model } from "mongoose";
 
 export const schemaName = path.basename(__filename).split(".")[0];
 

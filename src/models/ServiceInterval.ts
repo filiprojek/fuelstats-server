@@ -1,4 +1,4 @@
-import { Schema, model, Document } from "mongoose";
+import { type Document, model, Schema } from "mongoose";
 
 export interface IServiceInterval extends Document {
 	userId: string;
@@ -16,7 +16,7 @@ const serviceIntervalSchema = new Schema<IServiceInterval>(
 		intervalKm: { type: Number, default: null },
 		intervalMonths: { type: Number, default: null },
 	},
-	{ timestamps: { createdAt: true, updatedAt: true } }
+	{ timestamps: { createdAt: true, updatedAt: true } },
 );
 
 const ServiceInterval = model<IServiceInterval>("ServiceInterval", serviceIntervalSchema);

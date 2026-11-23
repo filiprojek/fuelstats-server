@@ -1,8 +1,8 @@
-import request from "supertest";
 import jwt from "jsonwebtoken";
+import request from "supertest";
 import { app } from "../src/app";
-import OdometerService from "../src/services/OdometerService";
 import env from "../src/config/environment";
+import OdometerService from "../src/services/OdometerService";
 
 describe("OdometerController – edge cases", () => {
 	const userId = "user123";

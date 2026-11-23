@@ -1,9 +1,8 @@
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import AuthService from "../src/services/AuthService";
+import env, { parseRememberDays } from "../src/config/environment";
 import User from "../src/models/User";
-import env from "../src/config/environment";
-import { parseRememberDays } from "../src/config/environment";
+import AuthService from "../src/services/AuthService";
 
 const DAY = 24 * 60 * 60;
 const decode = (token: string): any => jwt.verify(token, env.JWT_SECRET);

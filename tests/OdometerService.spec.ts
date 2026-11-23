@@ -35,9 +35,7 @@ describe("OdometerService", () => {
 	});
 
 	it("lists odometer records for a user", async () => {
-		const mockRecords = [
-			{ id: "o1", userId, vehicleId, mileage: 80000, date: new Date(), createdAt: new Date() },
-		];
+		const mockRecords = [{ id: "o1", userId, vehicleId, mileage: 80000, date: new Date(), createdAt: new Date() }];
 
 		const makeQuery = (val: any) => ({
 			sort: () => Promise.resolve(val),

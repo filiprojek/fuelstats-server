@@ -1,9 +1,9 @@
-import express from "express";
 import cookieParser from "cookie-parser";
-import request from "supertest";
+import express from "express";
 import jwt from "jsonwebtoken";
-import { requireAuth, AuthRequest } from "../src/middlewares/AuthMiddleware";
+import request from "supertest";
 import env from "../src/config/environment";
+import { type AuthRequest, requireAuth } from "../src/middlewares/AuthMiddleware";
 
 const app = express();
 app.use(cookieParser());
@@ -26,19 +26,26 @@ describe("requireAuth middleware", () => {
 	});
 
 	it("accepts a valid Bearer token", async () => {
-		const res = await request(app).get("/protected").set("Authorization", `Bearer ${sign("u1")}`);
+		const res = await request(app)
+			.get("/protected")
+			.set("Authorization", `Bearer ${sign("u1")}`);
 		expect(res.status).toBe(200);
 		expect(res.body).toEqual({ sub: "u1" });
 	});
 
 	it("accepts a valid jwt cookie", async () => {
-		const res = await request(app).get("/protected").set("Cookie", `jwt=${sign("u2")}`);
+		const res = await request(app)
+			.get("/protected")
+			.set("Cookie", `jwt=${sign("u2")}`);
 		expect(res.status).toBe(200);
 		expect(res.body).toEqual({ sub: "u2" });
 	});
 
 	it("prefers the Bearer header over the cookie", async () => {
-		const res = await request(app).get("/protected").set("Authorization", `Bearer ${sign("header")}`).set("Cookie", `jwt=${sign("cookie")}`);
+		const res = await request(app)
+			.get("/protected")
+			.set("Authorization", `Bearer ${sign("header")}`)
+			.set("Cookie", `jwt=${sign("cookie")}`);
 		expect(res.body).toEqual({ sub: "header" });
 	});
 

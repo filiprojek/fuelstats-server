@@ -1,13 +1,13 @@
-import ServiceTask from "../models/ServiceTask";
+import OdometerRecord from "../models/OdometerRecord";
+import Refuel from "../models/Refuel";
 import ServiceInterval from "../models/ServiceInterval";
 import ServiceLog from "../models/ServiceLog";
 import ServiceRecord from "../models/ServiceRecord";
-import Refuel from "../models/Refuel";
-import OdometerRecord from "../models/OdometerRecord";
+import ServiceTask from "../models/ServiceTask";
 import Vehicle from "../models/Vehicle";
-import { Err, Succ } from "./globalService";
-import { exactCaseInsensitive } from "../utils/regex";
 import { nullIfInvalidId } from "../utils/objectId";
+import { exactCaseInsensitive } from "../utils/regex";
+import { Err, Succ } from "./globalService";
 
 export interface ServiceIntervalDTO {
 	serviceTaskId?: string;
@@ -123,7 +123,7 @@ class ServiceTrackerService {
 			}
 
 			// Make sure task dictionary is seeded
-			await this.listServiceTasks();
+			await ServiceTrackerService.listServiceTasks();
 
 			const intervals = await ServiceInterval.find({ carId, userId });
 			const tasks = await ServiceTask.find({});
@@ -160,7 +160,7 @@ class ServiceTrackerService {
 				let taskId = item.serviceTaskId;
 
 				if (!taskId && item.serviceTaskName) {
-					const task = await this.getOrCreateServiceTask(item.serviceTaskName);
+					const task = await ServiceTrackerService.getOrCreateServiceTask(item.serviceTaskName);
 					taskId = task.id;
 				}
 
@@ -208,13 +208,13 @@ class ServiceTrackerService {
 			}
 
 			// Pre-seed if needed
-			await this.listServiceTasks();
+			await ServiceTrackerService.listServiceTasks();
 
 			const intervals = await ServiceInterval.find({ carId, userId });
 			const tasks = await ServiceTask.find({});
 			const taskMap = new Map(tasks.map((t) => [t.id, t]));
 
-			const currentOdometer = await this.getLatestOdometer(carId);
+			const currentOdometer = await ServiceTrackerService.getLatestOdometer(carId);
 			const today = new Date();
 			const results: ServiceStatusItem[] = [];
 
@@ -223,16 +223,12 @@ class ServiceTrackerService {
 				if (!task) continue;
 
 				// Find the latest service log in ServiceLog
-				let lastLog = await ServiceLog.findOne({ carId, serviceTaskId: task.id }).sort({ date: -1 });
+				const lastLog = await ServiceLog.findOne({ carId, serviceTaskId: task.id }).sort({ date: -1 });
 
 				// Fallback to ServiceRecord by matching type or custom type with the task name
-				let lastRecord = await ServiceRecord.findOne({
+				const lastRecord = await ServiceRecord.findOne({
 					vehicleId: carId,
-					$or: [
-						{ serviceType: task.id },
-						{ serviceType: task.name },
-						{ customType: task.name }
-					]
+					$or: [{ serviceType: task.id }, { serviceType: task.name }, { customType: task.name }],
 				}).sort({ date: -1 });
 
 				let lastServiceDate: Date | null = null;
@@ -361,11 +357,11 @@ class ServiceTrackerService {
 			await ServiceRecord.deleteMany({ vehicleId: carId, userId });
 
 			// 3. Find or create the two main tasks
-			const taskOil = await this.getOrCreateServiceTask("Výměna motorového oleje a filtru");
-			const taskBrake = await this.getOrCreateServiceTask("Brzdová kapalina");
+			const taskOil = await ServiceTrackerService.getOrCreateServiceTask("Výměna motorového oleje a filtru");
+			const taskBrake = await ServiceTrackerService.getOrCreateServiceTask("Brzdová kapalina");
 
 			// Also make sure other tasks are seeded
-			await this.listServiceTasks();
+			await ServiceTrackerService.listServiceTasks();
 
 			// 4. Create intervals
 			const intervalOil = new ServiceInterval({

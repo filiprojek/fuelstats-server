@@ -1,4 +1,4 @@
-import { isValidObjectId, Model } from "mongoose";
+import { isValidObjectId, type Model } from "mongoose";
 
 /**
  * In-memory stand-in for a Mongoose collection, used by the CSV import specs.

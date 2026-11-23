@@ -1,5 +1,5 @@
-import VehicleService, { CreateVehicleDTO } from "../src/services/VehicleService";
 import Vehicle from "../src/models/Vehicle";
+import VehicleService, { type CreateVehicleDTO } from "../src/services/VehicleService";
 
 describe("VehicleService", () => {
 	const dto: CreateVehicleDTO = {

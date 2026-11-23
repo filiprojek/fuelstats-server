@@ -1,20 +1,20 @@
+import cookieParser from "cookie-parser";
+import cors from "cors";
 import express, { type NextFunction, type Request, type Response } from "express";
 import morgan from "morgan";
 import path from "path";
-import cors from "cors";
-import cookieParser from "cookie-parser";
-import { router as routes } from "./routes";
-import { router as middlewares } from "./middlewares";
 import env from "./config/environment";
+import { router as middlewares } from "./middlewares";
+import { router as routes } from "./routes";
 
 export let corsWhitelist: Array<string>;
-if (env.CORS_WHITELIST != "undefined") {
+if (env.CORS_WHITELIST !== "undefined") {
 	corsWhitelist = [...["http://localhost:8080", "http://localhost:6040"], ...env.CORS_WHITELIST.split(";")];
 } else {
 	corsWhitelist = ["http://localhost:8080", "http://localhost:6040"];
 }
 const corsOptions = {
-	origin: function (origin: any, callback: any) {
+	origin: (origin: any, callback: any) => {
 		if (!origin || corsWhitelist.indexOf(origin) !== -1) {
 			callback(null, true);
 		} else {

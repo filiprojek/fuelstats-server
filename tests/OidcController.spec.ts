@@ -1,7 +1,7 @@
-import express from "express";
 import cookieParser from "cookie-parser";
-import request from "supertest";
+import express from "express";
 import jwt from "jsonwebtoken";
+import request from "supertest";
 import env from "../src/config/environment";
 import AuthService from "../src/services/AuthService";
 import OidcService from "../src/services/OidcService";
@@ -168,7 +168,9 @@ describe("OidcController", () => {
 			(OidcService.exchangeCode as jest.Mock).mockResolvedValue(claims);
 			(AuthService.loginWithOidc as jest.Mock).mockResolvedValue({ token: "tok", userId: "u1", created: false, linked: false });
 
-			const res = await request(app).get("/api/v1/auth/oidc/authelia/callback?code=abc&state=st").set("Cookie", stateCookie({ remember: true }));
+			const res = await request(app)
+				.get("/api/v1/auth/oidc/authelia/callback?code=abc&state=st")
+				.set("Cookie", stateCookie({ remember: true }));
 
 			expect(AuthService.loginWithOidc).toHaveBeenCalledWith(provider, claims, true);
 			expect(res.headers.location).toBe(`${APP}/auth/callback#token=tok&remember=1`);
@@ -179,7 +181,9 @@ describe("OidcController", () => {
 			(OidcService.exchangeCode as jest.Mock).mockResolvedValue(claims);
 			(AuthService.linkIdentity as jest.Mock).mockResolvedValue(undefined);
 
-			const res = await request(app).get("/api/v1/auth/oidc/authelia/callback?code=abc&state=st").set("Cookie", stateCookie({ linkUserId: "u1" }));
+			const res = await request(app)
+				.get("/api/v1/auth/oidc/authelia/callback?code=abc&state=st")
+				.set("Cookie", stateCookie({ linkUserId: "u1" }));
 
 			expect(AuthService.linkIdentity).toHaveBeenCalledWith("u1", provider, claims);
 			expect(AuthService.loginWithOidc).not.toHaveBeenCalled();
@@ -189,7 +193,9 @@ describe("OidcController", () => {
 		it("reports link errors back to settings", async () => {
 			(OidcService.exchangeCode as jest.Mock).mockResolvedValue(claims);
 			(AuthService.linkIdentity as jest.Mock).mockRejectedValue(Object.assign(new Error("in use"), { status: 409, code: "identity_in_use" }));
-			const res = await request(app).get("/api/v1/auth/oidc/authelia/callback?code=abc&state=st").set("Cookie", stateCookie({ linkUserId: "u1" }));
+			const res = await request(app)
+				.get("/api/v1/auth/oidc/authelia/callback?code=abc&state=st")
+				.set("Cookie", stateCookie({ linkUserId: "u1" }));
 			expect(res.headers.location).toBe(`${APP}/settings#error=identity_in_use`);
 		});
 

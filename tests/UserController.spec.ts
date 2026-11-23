@@ -1,9 +1,9 @@
-import request from "supertest";
 import jwt from "jsonwebtoken";
+import request from "supertest";
 import { app } from "../src/app";
+import env from "../src/config/environment";
 import User from "../src/models/User";
 import AuthService from "../src/services/AuthService";
-import env from "../src/config/environment";
 
 const userId = "123";
 const token = () => jwt.sign({ sub: userId, email: "test@example.com" }, env.JWT_SECRET, { expiresIn: "1h" });

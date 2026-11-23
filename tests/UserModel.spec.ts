@@ -32,6 +32,9 @@ describe("User model", () => {
 
 	it("declares a unique index on provider + subject", () => {
 		const indexes = User.schema.indexes();
-		expect(indexes).toContainEqual([{ "identities.provider": 1, "identities.subject": 1 }, expect.objectContaining({ unique: true, partialFilterExpression: { "identities.subject": { $exists: true } } })]);
+		expect(indexes).toContainEqual([
+			{ "identities.provider": 1, "identities.subject": 1 },
+			expect.objectContaining({ unique: true, partialFilterExpression: { "identities.subject": { $exists: true } } }),
+		]);
 	});
 });

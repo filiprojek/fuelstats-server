@@ -1,8 +1,8 @@
-import request from "supertest";
 import jwt from "jsonwebtoken";
+import request from "supertest";
 import { app } from "../src/app";
-import OdometerService from "../src/services/OdometerService";
 import env from "../src/config/environment";
+import OdometerService from "../src/services/OdometerService";
 
 describe("OdometerController", () => {
 	const userId = "user123";
@@ -32,10 +32,7 @@ describe("OdometerController", () => {
 
 			const spy = jest.spyOn(OdometerService, "create").mockResolvedValue(mockRecord as any);
 
-			const res = await request(app)
-				.post("/api/v1/odometer")
-				.set("Authorization", `Bearer ${token}`)
-				.send({ vehicleId: "veh1", mileage: 50000 });
+			const res = await request(app).post("/api/v1/odometer").set("Authorization", `Bearer ${token}`).send({ vehicleId: "veh1", mileage: 50000 });
 
 			expect(res.status).toBe(201);
 			expect(spy).toHaveBeenCalled();
@@ -48,9 +45,7 @@ describe("OdometerController", () => {
 			const mockRecords = [{ id: "odo123", mileage: 50000 }];
 			const spy = jest.spyOn(OdometerService, "list").mockResolvedValue(mockRecords as any);
 
-			const res = await request(app)
-				.get("/api/v1/odometer")
-				.set("Authorization", `Bearer ${token}`);
+			const res = await request(app).get("/api/v1/odometer").set("Authorization", `Bearer ${token}`);
 
 			expect(res.status).toBe(200);
 			expect(spy).toHaveBeenCalledWith(userId, undefined);
@@ -62,9 +57,7 @@ describe("OdometerController", () => {
 		it("deletes an odometer record", async () => {
 			const spy = jest.spyOn(OdometerService, "remove").mockResolvedValue(true);
 
-			const res = await request(app)
-				.delete("/api/v1/odometer/odo123")
-				.set("Authorization", `Bearer ${token}`);
+			const res = await request(app).delete("/api/v1/odometer/odo123").set("Authorization", `Bearer ${token}`);
 
 			expect(res.status).toBe(204);
 			expect(spy).toHaveBeenCalledWith("odo123", userId);

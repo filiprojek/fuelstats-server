@@ -1,4 +1,4 @@
-import { Request, Response } from "express";
+import type { Request, Response } from "express";
 import User from "../models/User";
 import AuthService from "../services/AuthService";
 import { Err, Succ } from "../services/globalService";

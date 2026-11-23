@@ -1,4 +1,4 @@
-import { Request, Response } from "express";
+import type { Request, Response } from "express";
 import AuthService from "../services/AuthService";
 import { Err, Succ } from "../services/globalService";
 import { clearAuthCookies, isRemember, setAuthCookies } from "../utils/authCookies";

@@ -1,6 +1,6 @@
-import OdometerRecord, { IOdometerRecord } from "../models/OdometerRecord";
-import { Err, Succ } from "./globalService";
+import OdometerRecord, { type IOdometerRecord } from "../models/OdometerRecord";
 import { nullIfInvalidId } from "../utils/objectId";
+import { Err, Succ } from "./globalService";
 
 export interface CreateOdometerDTO {
 	userId: string;
@@ -54,7 +54,7 @@ class OdometerService {
 	 */
 	static async create(dto: CreateOdometerDTO): Promise<OdometerPayload> {
 		try {
-			if (dto.isStart && (await this.hasStartRecord(dto.userId, dto.vehicleId))) {
+			if (dto.isStart && (await OdometerService.hasStartRecord(dto.userId, dto.vehicleId))) {
 				throw startConflict();
 			}
 
@@ -139,7 +139,7 @@ class OdometerService {
 					throw new Error("Odometer record not found");
 				}
 				const isStart = payload.isStart ?? current.isStart;
-				if (isStart && (await this.hasStartRecord(userId, payload.vehicleId || current.vehicleId, id))) {
+				if (isStart && (await OdometerService.hasStartRecord(userId, payload.vehicleId || current.vehicleId, id))) {
 					throw startConflict();
 				}
 			}

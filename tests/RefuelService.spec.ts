@@ -1,5 +1,5 @@
-import RefuelService, { CreateRefuelDTO } from "../src/services/RefuelService";
 import Refuel from "../src/models/Refuel";
+import RefuelService, { type CreateRefuelDTO } from "../src/services/RefuelService";
 
 describe("RefuelService", () => {
 	const dto: CreateRefuelDTO = {

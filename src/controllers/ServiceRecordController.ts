@@ -1,9 +1,9 @@
-import { Request, Response } from "express";
-import ServiceRecordService from "../services/ServiceRecordService";
-import { Err, Succ } from "../services/globalService";
+import { randomUUID } from "crypto";
+import type { Request, Response } from "express";
 import fs from "fs-extra";
 import path from "path";
-import { randomUUID } from "crypto";
+import { Err, Succ } from "../services/globalService";
+import ServiceRecordService from "../services/ServiceRecordService";
 
 const saveBase64Photo = async (base64: string): Promise<string> => {
 	if (!base64.startsWith("data:image/")) {

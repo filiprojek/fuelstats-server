@@ -1,11 +1,11 @@
-import { Request, Response, Router } from "express";
-import { router as rootRoutes } from "./rootRoutes";
+import { type Request, type Response, Router } from "express";
 import AuthRoutes from "./AuthRoutes";
+import OdometerRoutes from "./OdometerRoutes";
+import RefuelRoutes from "./RefuelRoutes";
+import { router as rootRoutes } from "./rootRoutes";
+import ServiceRecordRoutes from "./ServiceRecordRoutes";
 import UserRoutes from "./UserRoutes";
 import VehicleRoutes from "./VehicleRoutes";
-import RefuelRoutes from "./RefuelRoutes";
-import ServiceRecordRoutes from "./ServiceRecordRoutes";
-import OdometerRoutes from "./OdometerRoutes";
 
 export const router = Router();
 
@@ -16,7 +16,7 @@ router.get("/api/v1/version", (req: Request, res: Response) => {
 	res.json({
 		name: "fuelstats-server",
 		version: "1.1.1",
-		apiVersion: "v1"
+		apiVersion: "v1",
 	});
 });
 

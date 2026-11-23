@@ -1,11 +1,11 @@
-import User from "../models/User";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import env from "../config/environment";
+import type { OidcProviderConfig } from "../config/oidc";
+import User from "../models/User";
 import { Err, Succ } from "../services/globalService";
-import { OidcProviderConfig } from "../config/oidc";
-import { OidcClaims } from "./OidcService";
 import { exactCaseInsensitive } from "../utils/regex";
+import type { OidcClaims } from "./OidcService";
 
 const authError = (status: number, message: string, code?: string, data?: any) => {
 	const error: any = new Error(message);
@@ -25,7 +25,7 @@ class AuthService {
 	 * Token lifetime in seconds; remembered sessions last AUTH_REMEMBER_DAYS
 	 */
 	static maxAge(remember: boolean): number {
-		return remember ? env.AUTH_REMEMBER_DAYS * 24 * 60 * 60 : this.sessionMaxAge;
+		return remember ? env.AUTH_REMEMBER_DAYS * 24 * 60 * 60 : AuthService.sessionMaxAge;
 	}
 
 	/**
@@ -78,7 +78,7 @@ class AuthService {
 			throw error;
 		}
 
-		const token = this.signToken(user, !!data.remember);
+		const token = AuthService.signToken(user, !!data.remember);
 		new Succ(200, `Token issued for user ${user.id}`);
 		return token;
 	}
@@ -90,7 +90,7 @@ class AuthService {
 		const payload: Record<string, unknown> = { sub: user.id, email: user.email };
 		if (remember) payload.rem = true;
 		return jwt.sign(payload, env.JWT_SECRET, {
-			expiresIn: this.maxAge(remember),
+			expiresIn: AuthService.maxAge(remember),
 		});
 	}
 
@@ -103,24 +103,20 @@ class AuthService {
 			throw authError(401, "User not found", undefined, { userId });
 		}
 		new Succ(200, `Session refreshed for user ${user.id}`);
-		return { token: this.signToken(user, remember), remember };
+		return { token: AuthService.signToken(user, remember), remember };
 	}
 
 	/**
 	 * Sign in through an OpenID Connect provider.
 	 * Resolution order: linked identity -> existing account with the same verified email (auto-link) -> new account.
 	 */
-	static async loginWithOidc(
-		provider: OidcProviderConfig,
-		claims: OidcClaims,
-		remember = false,
-	): Promise<{ token: string; userId: string; created: boolean; linked: boolean }> {
+	static async loginWithOidc(provider: OidcProviderConfig, claims: OidcClaims, remember = false): Promise<{ token: string; userId: string; created: boolean; linked: boolean }> {
 		const identity = { provider: provider.id, subject: claims.sub, email: claims.email, linkedAt: new Date() };
 
 		const linkedUser = await User.findOne({ identities: { $elemMatch: { provider: provider.id, subject: claims.sub } } });
 		if (linkedUser) {
 			new Succ(200, `User ${linkedUser.id} signed in with ${provider.id}`);
-			return { token: this.signToken(linkedUser, remember), userId: linkedUser.id, created: false, linked: false };
+			return { token: AuthService.signToken(linkedUser, remember), userId: linkedUser.id, created: false, linked: false };
 		}
 
 		if (!claims.email) {
@@ -138,7 +134,7 @@ class AuthService {
 			existing.identities.push(identity);
 			await existing.save();
 			new Succ(200, `Linked ${provider.id} identity to user ${existing.id} by verified email`);
-			return { token: this.signToken(existing, remember), userId: existing.id, created: false, linked: true };
+			return { token: AuthService.signToken(existing, remember), userId: existing.id, created: false, linked: true };
 		}
 
 		if (!provider.allowSignup) {
@@ -152,7 +148,7 @@ class AuthService {
 		});
 		await user.save();
 		new Succ(201, `User ${user.id} registered through ${provider.id}`);
-		return { token: this.signToken(user, remember), userId: user.id, created: true, linked: true };
+		return { token: AuthService.signToken(user, remember), userId: user.id, created: true, linked: true };
 	}
 
 	/**

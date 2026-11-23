@@ -1,10 +1,10 @@
-import request from "supertest";
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
+import request from "supertest";
 import { app } from "../src/app";
+import env from "../src/config/environment";
 import OdometerRecord from "../src/models/OdometerRecord";
 import OdometerService from "../src/services/OdometerService";
-import env from "../src/config/environment";
 
 const userId = "user123";
 

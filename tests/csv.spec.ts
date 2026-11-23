@@ -1,4 +1,4 @@
-import { toCSV, parseCSV } from "../src/utils/csv";
+import { parseCSV, toCSV } from "../src/utils/csv";
 
 describe("csv utils", () => {
 	describe("toCSV", () => {
@@ -7,7 +7,12 @@ describe("csv utils", () => {
 		});
 
 		it("writes a header row and values", () => {
-			expect(toCSV([{ a: 1, b: "x" }, { a: 2, b: null }])).toBe("a,b\n1,x\n2,");
+			expect(
+				toCSV([
+					{ a: 1, b: "x" },
+					{ a: 2, b: null },
+				]),
+			).toBe("a,b\n1,x\n2,");
 		});
 
 		it("writes the given columns in order, leaving missing values empty and dropping other keys", () => {

@@ -1,10 +1,10 @@
-import { Request, Response } from "express";
+import type { Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import env from "../config/environment";
 import { getOidcProvider, listOidcProviders, oidcCallbackUrl } from "../config/oidc";
 import AuthService from "../services/AuthService";
-import OidcService from "../services/OidcService";
 import { Err, Succ } from "../services/globalService";
+import OidcService from "../services/OidcService";
 import { isRemember, setAuthCookies } from "../utils/authCookies";
 
 const STATE_COOKIE = "oidc_state";

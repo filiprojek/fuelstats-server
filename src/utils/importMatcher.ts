@@ -1,4 +1,4 @@
-import { isValidObjectId, Model } from "mongoose";
+import { isValidObjectId, type Model } from "mongoose";
 
 /**
  * Finds the existing record a CSV import row duplicates, so that row can be skipped.

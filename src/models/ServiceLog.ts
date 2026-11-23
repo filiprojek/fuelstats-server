@@ -1,4 +1,4 @@
-import { Schema, model, Document } from "mongoose";
+import { type Document, model, Schema } from "mongoose";
 
 export interface IServiceLog extends Document {
 	userId: string;
@@ -23,7 +23,7 @@ const serviceLogSchema = new Schema<IServiceLog>(
 		price: { type: Number, required: true },
 		note: { type: String },
 	},
-	{ timestamps: { createdAt: true, updatedAt: false } }
+	{ timestamps: { createdAt: true, updatedAt: false } },
 );
 
 const ServiceLog = model<IServiceLog>("ServiceLog", serviceLogSchema);

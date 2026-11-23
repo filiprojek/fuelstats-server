@@ -1,8 +1,8 @@
-import request from "supertest";
 import jwt from "jsonwebtoken";
+import request from "supertest";
 import { app } from "../src/app";
-import VehicleService from "../src/services/VehicleService";
 import env from "../src/config/environment";
+import VehicleService from "../src/services/VehicleService";
 
 describe("VehicleController – POST /api/v1/vehicles", () => {
 	const userId = "user123";

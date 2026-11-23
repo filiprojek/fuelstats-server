@@ -1,8 +1,8 @@
 import http from "http";
 import { app } from "./app";
+import connectDB from "./config/database";
 import env from "./config/environment";
 import { Succ } from "./services/globalService";
-import connectDB from "./config/database";
 
 const port: number = env.APP_PORT || 8080;
 const hostname: string = env.APP_HOSTNAME || "localhost";

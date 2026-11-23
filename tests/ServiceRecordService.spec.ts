@@ -1,8 +1,8 @@
-import ServiceRecordService, { CreateServiceRecordDTO } from "../src/services/ServiceRecordService";
+import ServiceLog from "../src/models/ServiceLog";
 import ServiceRecord from "../src/models/ServiceRecord";
 
 import ServiceTask from "../src/models/ServiceTask";
-import ServiceLog from "../src/models/ServiceLog";
+import ServiceRecordService, { type CreateServiceRecordDTO } from "../src/services/ServiceRecordService";
 
 describe("ServiceRecordService", () => {
 	const photoName = "img.jpg";

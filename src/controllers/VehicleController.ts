@@ -1,6 +1,6 @@
-import { Request, Response } from "express";
-import VehicleService from "../services/VehicleService";
+import type { Request, Response } from "express";
 import { Err, Succ } from "../services/globalService";
+import VehicleService from "../services/VehicleService";
 
 class VehicleController {
 	static async create(req: Request, res: Response): Promise<Response> {

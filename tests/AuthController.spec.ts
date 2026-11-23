@@ -1,11 +1,11 @@
-import request from "supertest";
-import express from "express";
 import bodyParser from "body-parser";
-import AuthRoutes from "../src/routes/AuthRoutes";
 import cookieParser from "cookie-parser";
+import express from "express";
 import jwt from "jsonwebtoken";
-import AuthService from "../src/services/AuthService";
+import request from "supertest";
 import env from "../src/config/environment";
+import AuthRoutes from "../src/routes/AuthRoutes";
+import AuthService from "../src/services/AuthService";
 
 jest.mock("../src/services/AuthService");
 const app = express();
@@ -124,7 +124,9 @@ describe("AuthController remember me", () => {
 
 		it("renews a remembered session", async () => {
 			(AuthService.refresh as jest.Mock).mockResolvedValue({ token: "new", remember: true });
-			const res = await request(app).post("/api/v1/auth/refresh").set("Authorization", `Bearer ${sign({ sub: "u1", email: "a@b.com", rem: true })}`);
+			const res = await request(app)
+				.post("/api/v1/auth/refresh")
+				.set("Authorization", `Bearer ${sign({ sub: "u1", email: "a@b.com", rem: true })}`);
 			expect(res.status).toBe(200);
 			expect(AuthService.refresh).toHaveBeenCalledWith("u1", true);
 			expect(res.body).toEqual({ token: "new", remember: true });
@@ -133,14 +135,18 @@ describe("AuthController remember me", () => {
 
 		it("renews a session token as a session token", async () => {
 			(AuthService.refresh as jest.Mock).mockResolvedValue({ token: "new", remember: false });
-			const res = await request(app).post("/api/v1/auth/refresh").set("Cookie", `jwt=${sign({ sub: "u1", email: "a@b.com" })}`);
+			const res = await request(app)
+				.post("/api/v1/auth/refresh")
+				.set("Cookie", `jwt=${sign({ sub: "u1", email: "a@b.com" })}`);
 			expect(AuthService.refresh).toHaveBeenCalledWith("u1", false);
 			expect(cookiesOf(res).find((c) => c.startsWith("jwt=new"))).not.toMatch(/Max-Age/);
 		});
 
 		it("clears the session when the user no longer exists", async () => {
 			(AuthService.refresh as jest.Mock).mockRejectedValue({ status: 401, message: "User not found" });
-			const res = await request(app).post("/api/v1/auth/refresh").set("Authorization", `Bearer ${sign({ sub: "gone" })}`);
+			const res = await request(app)
+				.post("/api/v1/auth/refresh")
+				.set("Authorization", `Bearer ${sign({ sub: "gone" })}`);
 			expect(res.status).toBe(401);
 			expect(res.body).toEqual({ error: "User not found" });
 			expect(cookiesOf(res).some((c) => c.startsWith("jwt=;"))).toBe(true);
@@ -148,7 +154,9 @@ describe("AuthController remember me", () => {
 
 		it("defaults to 500 on unexpected errors", async () => {
 			(AuthService.refresh as jest.Mock).mockRejectedValue(new Error("db"));
-			const res = await request(app).post("/api/v1/auth/refresh").set("Authorization", `Bearer ${sign({ sub: "u1" })}`);
+			const res = await request(app)
+				.post("/api/v1/auth/refresh")
+				.set("Authorization", `Bearer ${sign({ sub: "u1" })}`);
 			expect(res.status).toBe(500);
 		});
 	});

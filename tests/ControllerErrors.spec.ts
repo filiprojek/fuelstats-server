@@ -1,14 +1,14 @@
-import request from "supertest";
-import jwt from "jsonwebtoken";
 import fs from "fs-extra";
+import jwt from "jsonwebtoken";
 import { Types } from "mongoose";
+import request from "supertest";
 import { app } from "../src/app";
-import ServiceLog from "../src/models/ServiceLog";
 import env from "../src/config/environment";
+import ServiceLog from "../src/models/ServiceLog";
 import RefuelService from "../src/services/RefuelService";
-import VehicleService from "../src/services/VehicleService";
 import ServiceRecordService from "../src/services/ServiceRecordService";
 import ServiceTrackerService from "../src/services/ServiceTrackerService";
+import VehicleService from "../src/services/VehicleService";
 
 const token = jwt.sign({ sub: "u1", email: "u@example.com" }, env.JWT_SECRET, { expiresIn: "1h" });
 const auth = { Authorization: `Bearer ${token}` };

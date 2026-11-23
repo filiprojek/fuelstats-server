@@ -1,6 +1,6 @@
-import Vehicle, { IVehicle } from "../models/Vehicle";
-import { Err, Succ } from "./globalService";
+import Vehicle, { type IVehicle } from "../models/Vehicle";
 import { nullIfInvalidId } from "../utils/objectId";
+import { Err, Succ } from "./globalService";
 
 /** DTO for creating a vehicle */
 export interface CreateVehicleDTO {

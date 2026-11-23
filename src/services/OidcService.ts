@@ -1,6 +1,6 @@
 import crypto from "crypto";
 import jwt from "jsonwebtoken";
-import { OidcProviderConfig } from "../config/oidc";
+import type { OidcProviderConfig } from "../config/oidc";
 import { Err } from "./globalService";
 
 export interface OidcDiscovery {
@@ -48,11 +48,11 @@ class OidcService {
 	private static discoveryCache = new Map<string, OidcDiscovery>();
 
 	static clearCache() {
-		this.discoveryCache.clear();
+		OidcService.discoveryCache.clear();
 	}
 
 	static async getDiscovery(provider: OidcProviderConfig): Promise<OidcDiscovery> {
-		const cached = this.discoveryCache.get(provider.issuer);
+		const cached = OidcService.discoveryCache.get(provider.issuer);
 		if (cached) return cached;
 
 		const url = `${provider.issuer}/.well-known/openid-configuration`;
@@ -66,12 +66,12 @@ class OidcService {
 			return fail(502, `OIDC discovery failed for ${provider.id}`, { url, status: res.status });
 		}
 		const doc = (await res.json()) as OidcDiscovery;
-		this.discoveryCache.set(provider.issuer, doc);
+		OidcService.discoveryCache.set(provider.issuer, doc);
 		return doc;
 	}
 
 	static async createAuthRequest(provider: OidcProviderConfig, redirectUri: string): Promise<OidcAuthRequest> {
-		const discovery = await this.getDiscovery(provider);
+		const discovery = await OidcService.getDiscovery(provider);
 		const state = randomToken();
 		const nonce = randomToken();
 		const codeVerifier = randomToken(48);
@@ -90,11 +90,8 @@ class OidcService {
 		return { url: url.toString(), state, nonce, codeVerifier };
 	}
 
-	static async exchangeCode(
-		provider: OidcProviderConfig,
-		params: { code: string; codeVerifier: string; nonce: string; redirectUri: string },
-	): Promise<OidcClaims> {
-		const discovery = await this.getDiscovery(provider);
+	static async exchangeCode(provider: OidcProviderConfig, params: { code: string; codeVerifier: string; nonce: string; redirectUri: string }): Promise<OidcClaims> {
+		const discovery = await OidcService.getDiscovery(provider);
 
 		const body = new URLSearchParams({
 			grant_type: "authorization_code",
@@ -129,7 +126,7 @@ class OidcService {
 			return fail(401, `OIDC provider ${provider.id} returned no id_token`);
 		}
 
-		const idClaims = this.validateIdToken(provider, discovery, tokens.id_token, params.nonce);
+		const idClaims = OidcService.validateIdToken(provider, discovery, tokens.id_token, params.nonce);
 
 		let userinfo: any = {};
 		if (discovery.userinfo_endpoint && tokens.access_token) {

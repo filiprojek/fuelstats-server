@@ -1,8 +1,8 @@
-import request from "supertest";
 import jwt from "jsonwebtoken";
+import request from "supertest";
 import { app } from "../src/app";
-import ServiceRecordService from "../src/services/ServiceRecordService";
 import env from "../src/config/environment";
+import ServiceRecordService from "../src/services/ServiceRecordService";
 
 describe("ServiceRecordController – POST /api/v1/services", () => {
 	const userId = "user123";

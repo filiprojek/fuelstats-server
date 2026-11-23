@@ -1,12 +1,12 @@
-import ServiceTrackerService from "../src/services/ServiceTrackerService";
-import ServiceTask from "../src/models/ServiceTask";
+import mongoose from "mongoose";
+import OdometerRecord from "../src/models/OdometerRecord";
+import Refuel from "../src/models/Refuel";
 import ServiceInterval from "../src/models/ServiceInterval";
 import ServiceLog from "../src/models/ServiceLog";
 import ServiceRecord from "../src/models/ServiceRecord";
+import ServiceTask from "../src/models/ServiceTask";
 import Vehicle from "../src/models/Vehicle";
-import Refuel from "../src/models/Refuel";
-import OdometerRecord from "../src/models/OdometerRecord";
-import mongoose from "mongoose";
+import ServiceTrackerService from "../src/services/ServiceTrackerService";
 
 describe("ServiceTrackerService", () => {
 	const userId = "60f7b1b2f1d2b3c4d5e6f7a1";
@@ -29,7 +29,9 @@ describe("ServiceTrackerService", () => {
 			fuelType: "petrol",
 			isDefault: true,
 			createdAt: new Date("2024-01-01"),
-			save: jest.fn().mockImplementation(function (this: any) { return Promise.resolve(this); }),
+			save: jest.fn().mockImplementation(function (this: any) {
+				return Promise.resolve(this);
+			}),
 		};
 
 		const mockTask = {
@@ -111,9 +113,7 @@ describe("ServiceTrackerService", () => {
 
 	describe("saveServiceIntervals()", () => {
 		it("saves new intervals for a vehicle", async () => {
-			const result = await ServiceTrackerService.saveServiceIntervals(userId, carId, [
-				{ serviceTaskId: taskId, intervalKm: 15000, intervalMonths: 12 },
-			]);
+			const result = await ServiceTrackerService.saveServiceIntervals(userId, carId, [{ serviceTaskId: taskId, intervalKm: 15000, intervalMonths: 12 }]);
 
 			expect(result.length).toBe(1);
 		});
@@ -121,9 +121,7 @@ describe("ServiceTrackerService", () => {
 		it("throws error if vehicle is not found", async () => {
 			jest.spyOn(Vehicle, "findOne").mockResolvedValue(null);
 
-			await expect(
-				ServiceTrackerService.saveServiceIntervals(userId, carId, [])
-			).rejects.toThrow("Vehicle not found");
+			await expect(ServiceTrackerService.saveServiceIntervals(userId, carId, [])).rejects.toThrow("Vehicle not found");
 		});
 	});
 
@@ -140,12 +138,8 @@ describe("ServiceTrackerService", () => {
 
 	describe("getServiceStatus()", () => {
 		it("calculates status correctly (OVERDUE, WARNING, OK)", async () => {
-			jest.spyOn(ServiceTask, "find").mockResolvedValue([
-				{ id: taskId, name: "Výměna motorového oleje a filtru" },
-			] as any);
-			jest.spyOn(ServiceInterval, "find").mockResolvedValue([
-				{ id: "60f7b1b2f1d2b3c4d5e6f7a5", carId, serviceTaskId: taskId, intervalKm: 10000, intervalMonths: 12 },
-			] as any);
+			jest.spyOn(ServiceTask, "find").mockResolvedValue([{ id: taskId, name: "Výměna motorového oleje a filtru" }] as any);
+			jest.spyOn(ServiceInterval, "find").mockResolvedValue([{ id: "60f7b1b2f1d2b3c4d5e6f7a5", carId, serviceTaskId: taskId, intervalKm: 10000, intervalMonths: 12 }] as any);
 			jest.spyOn(Refuel, "findOne").mockImplementation(() => makeQuery({ mileage: 15000 }) as any);
 
 			const statuses = await ServiceTrackerService.getServiceStatus(userId, carId);

@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
-import env from "./environment";
 import { Err, Succ } from "../services/globalService";
+import env from "./environment";
 
 // MongoDB
 const dbURI: string = env.DB_URI;
@@ -11,7 +11,7 @@ async function connect(): Promise<boolean> {
 			return false;
 		}
 
-		if (env.NORK.database.orm == "mongoose") {
+		if (env.NORK.database.orm === "mongoose") {
 			await mongoose.connect(dbURI);
 			new Succ(200, "connected to db");
 			return true;

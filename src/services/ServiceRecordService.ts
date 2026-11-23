@@ -1,11 +1,11 @@
-import ServiceRecord, { IServiceRecord } from "../models/ServiceRecord";
-import ServiceTask from "../models/ServiceTask";
 import ServiceLog from "../models/ServiceLog";
-import { Err, Succ } from "./globalService";
-import { toCSV, parseCSV } from "../utils/csv";
-import { exactCaseInsensitive } from "../utils/regex";
+import ServiceRecord, { type IServiceRecord } from "../models/ServiceRecord";
+import ServiceTask from "../models/ServiceTask";
+import { parseCSV, toCSV } from "../utils/csv";
 import { ImportMatcher } from "../utils/importMatcher";
 import { nullIfInvalidId } from "../utils/objectId";
+import { exactCaseInsensitive } from "../utils/regex";
+import { Err, Succ } from "./globalService";
 import type { CsvImportResult } from "./RefuelService";
 
 export const SERVICE_RECORD_CSV_COLUMNS = ["id", "vehicleId", "serviceType", "customType", "itemName", "cost", "mileage", "shop", "selfService", "note", "photos", "date", "createdAt"];
@@ -16,7 +16,14 @@ async function syncServiceLog(record: any) {
 		const lowerType = String(record.serviceType).toLowerCase();
 		if (lowerType === "engine-oil" || lowerType === "oil") {
 			mappedName = "Výměna motorového oleje a filtru";
-		} else if (lowerType === "brake-fluid" || lowerType === "brakes" || lowerType === "brake-pads-front" || lowerType === "brake-pads-rear" || lowerType === "brake-discs-front" || lowerType === "brake-discs-rear") {
+		} else if (
+			lowerType === "brake-fluid" ||
+			lowerType === "brakes" ||
+			lowerType === "brake-pads-front" ||
+			lowerType === "brake-pads-rear" ||
+			lowerType === "brake-discs-front" ||
+			lowerType === "brake-discs-rear"
+		) {
 			mappedName = "Brzdová kapalina";
 		} else if (lowerType === "cabin-filter") {
 			mappedName = "Výměna kabinového (mikro)filtru";
@@ -47,7 +54,7 @@ async function syncServiceLog(record: any) {
 				price: record.cost,
 				note: record.note || "",
 			},
-			{ upsert: true, new: true }
+			{ upsert: true, new: true },
 		);
 	} catch (err) {
 		console.error("Failed to sync service log:", err);
@@ -78,8 +85,6 @@ function parseFlexibleDate(dateStr: string): Date {
 	}
 	return d;
 }
-
-
 
 export interface CreateServiceRecordDTO {
 	userId: string;

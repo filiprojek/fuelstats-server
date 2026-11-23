@@ -1,7 +1,7 @@
 import crypto from "crypto";
 import jwt from "jsonwebtoken";
+import type { OidcProviderConfig } from "../src/config/oidc";
 import OidcService from "../src/services/OidcService";
-import { OidcProviderConfig } from "../src/config/oidc";
 
 const provider: OidcProviderConfig = {
 	id: "authelia",
@@ -137,7 +137,8 @@ describe("OidcService", () => {
 		it("uses client_secret_post when the provider only supports it", async () => {
 			OidcService.clearCache();
 			fetchMock.mockImplementation(async (url: string) => {
-				if (url.endsWith("/.well-known/openid-configuration")) return jsonResponse({ ...discovery, userinfo_endpoint: undefined, token_endpoint_auth_methods_supported: ["client_secret_post"] });
+				if (url.endsWith("/.well-known/openid-configuration"))
+					return jsonResponse({ ...discovery, userinfo_endpoint: undefined, token_endpoint_auth_methods_supported: ["client_secret_post"] });
 				return jsonResponse({ id_token: idToken() });
 			});
 			await OidcService.exchangeCode(provider, params);
@@ -185,10 +186,7 @@ describe("OidcService", () => {
 			["expiry", { exp: Math.floor(Date.now() / 1000) - 60 }],
 			["subject", { sub: undefined }],
 		])("rejects an id token with a wrong %s", async (_label, claims) => {
-			const token =
-				"exp" in claims
-					? jwt.sign({ iss: discovery.issuer, aud: provider.clientId, sub: "s", nonce: "nonce-1", ...claims }, "k")
-					: idToken(claims);
+			const token = "exp" in claims ? jwt.sign({ iss: discovery.issuer, aud: provider.clientId, sub: "s", nonce: "nonce-1", ...claims }, "k") : idToken(claims);
 			mockFlow({ id_token: token });
 			await expect(OidcService.exchangeCode(provider, params)).rejects.toMatchObject({ status: 401 });
 		});

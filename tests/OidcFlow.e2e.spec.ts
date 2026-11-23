@@ -1,9 +1,9 @@
-import http from "http";
 import crypto from "crypto";
 import express from "express";
-import request from "supertest";
+import type http from "http";
 import jwt from "jsonwebtoken";
 import type { AddressInfo } from "net";
+import request from "supertest";
 
 /**
  * End-to-end OIDC flow against a fake provider over real HTTP:
@@ -34,11 +34,20 @@ describe("OIDC sign-in flow (e2e with fake provider)", () => {
 			tokenRequests.push(body);
 			const auth = Buffer.from(String(req.headers.authorization).replace("Basic ", ""), "base64").toString();
 			const entry = pending.get(String(body.get("code")));
-			const verifierOk = entry && crypto.createHash("sha256").update(String(body.get("code_verifier"))).digest("base64url") === entry.challenge;
+			const verifierOk =
+				entry &&
+				crypto
+					.createHash("sha256")
+					.update(String(body.get("code_verifier")))
+					.digest("base64url") === entry.challenge;
 			if (auth !== "fuelstats:s3cret" || !entry || !verifierOk || body.get("redirect_uri") !== entry.redirectUri) {
 				return res.status(400).json({ error: "invalid_grant" });
 			}
-			const idToken = jwt.sign({ iss: issuer, aud: "fuelstats", sub: "alice-sub", nonce: entry.nonce, email: "alice@example.com", email_verified: true, preferred_username: "alice" }, "idp-private", { expiresIn: 60 });
+			const idToken = jwt.sign(
+				{ iss: issuer, aud: "fuelstats", sub: "alice-sub", nonce: entry.nonce, email: "alice@example.com", email_verified: true, preferred_username: "alice" },
+				"idp-private",
+				{ expiresIn: 60 },
+			);
 			res.json({ id_token: idToken, access_token: "at-1", token_type: "Bearer" });
 		});
 		provider.get("/userinfo", (req, res) => {
@@ -86,9 +95,14 @@ describe("OIDC sign-in flow (e2e with fake provider)", () => {
 			challenge: authorize.searchParams.get("code_challenge")!,
 			redirectUri: authorize.searchParams.get("redirect_uri")!,
 		});
-		const cookie = ([] as string[]).concat(start.headers["set-cookie"] as any).map((c) => c.split(";")[0]).join("; ");
+		const cookie = ([] as string[])
+			.concat(start.headers["set-cookie"] as any)
+			.map((c) => c.split(";")[0])
+			.join("; ");
 		const callbackPath = new URL(authorize.searchParams.get("redirect_uri")!).pathname;
-		return request(app).get(`${callbackPath}?code=${code}&state=${authorize.searchParams.get("state")}`).set("Cookie", cookie);
+		return request(app)
+			.get(`${callbackPath}?code=${code}&state=${authorize.searchParams.get("state")}`)
+			.set("Cookie", cookie);
 	}
 
 	it("lists the provider", async () => {

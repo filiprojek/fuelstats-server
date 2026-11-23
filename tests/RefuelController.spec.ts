@@ -1,8 +1,8 @@
-import request from "supertest";
 import jwt from "jsonwebtoken";
+import request from "supertest";
 import { app } from "../src/app";
-import RefuelService from "../src/services/RefuelService";
 import env from "../src/config/environment";
+import RefuelService from "../src/services/RefuelService";
 
 describe("RefuelController – POST /api/v1/refuels", () => {
 	const userId = "user123";
@@ -144,10 +144,13 @@ describe("RefuelController – PUT /api/v1/refuels/:id", () => {
 		const spy = jest.spyOn(RefuelService, "update").mockResolvedValue(returned as any);
 		const customDate = "2024-01-01T12:00:00.000Z";
 
-		const res = await request(app).put(`/api/v1/refuels/${refuelId}`).set("Authorization", `Bearer ${token}`).send({
-			...updatePayload,
-			date: customDate,
-		});
+		const res = await request(app)
+			.put(`/api/v1/refuels/${refuelId}`)
+			.set("Authorization", `Bearer ${token}`)
+			.send({
+				...updatePayload,
+				date: customDate,
+			});
 
 		expect(spy).toHaveBeenCalledWith(refuelId, userId, {
 			...updatePayload,

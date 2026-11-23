@@ -1,8 +1,8 @@
-import Refuel, { IRefuel } from "../models/Refuel";
-import { Err, Succ } from "./globalService";
-import { toCSV, parseCSV } from "../utils/csv";
+import Refuel, { type IRefuel } from "../models/Refuel";
+import { parseCSV, toCSV } from "../utils/csv";
 import { ImportMatcher } from "../utils/importMatcher";
 import { nullIfInvalidId } from "../utils/objectId";
+import { Err, Succ } from "./globalService";
 
 export const REFUEL_CSV_COLUMNS = ["id", "vehicleId", "fuelType", "note", "liters", "pricePerLiter", "totalPrice", "mileage", "date", "createdAt"];
 
@@ -286,7 +286,7 @@ class RefuelService {
 					pricePerLiter: Number(row.pricePerLiter),
 					totalPrice: Number(row.totalPrice),
 					mileage: Number(row.mileage),
-					date: row.date ? new Date(row.date) : (row.createdAt ? new Date(row.createdAt) : undefined),
+					date: row.date ? new Date(row.date) : row.createdAt ? new Date(row.createdAt) : undefined,
 					createdAt: row.createdAt ? new Date(row.createdAt) : undefined,
 				} as Partial<IRefuel>);
 

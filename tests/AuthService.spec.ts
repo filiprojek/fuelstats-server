@@ -1,7 +1,7 @@
-import AuthService from "../src/services/AuthService";
-import User from "../src/models/User";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import User from "../src/models/User";
+import AuthService from "../src/services/AuthService";
 
 describe("AuthService", () => {
 	const testUser = {

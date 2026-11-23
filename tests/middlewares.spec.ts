@@ -1,9 +1,9 @@
 import express from "express";
-import request from "supertest";
 import { query } from "express-validator";
-import handleValidation from "../src/middlewares/handleValidation";
+import request from "supertest";
 import { app } from "../src/app";
 import { parseBodyLimit } from "../src/config/environment";
+import handleValidation from "../src/middlewares/handleValidation";
 
 describe("handleValidation", () => {
 	const testApp = express();
@@ -57,12 +57,18 @@ describe("request body size", () => {
 
 	it("accepts JSON bodies with photos well above the express default of 100kb", async () => {
 		// parsed successfully, then rejected by requireAuth instead of the body parser
-		const res = await request(app).post("/api/v1/services").set("Content-Type", "application/json").send(json(5 * 1024 * 1024));
+		const res = await request(app)
+			.post("/api/v1/services")
+			.set("Content-Type", "application/json")
+			.send(json(5 * 1024 * 1024));
 		expect(res.status).toBe(401);
 	});
 
 	it("answers bodies above the limit with a JSON 413", async () => {
-		const res = await request(app).post("/api/v1/services").set("Content-Type", "application/json").send(json(26 * 1024 * 1024));
+		const res = await request(app)
+			.post("/api/v1/services")
+			.set("Content-Type", "application/json")
+			.send(json(26 * 1024 * 1024));
 		expect(res.status).toBe(413);
 		expect(res.body).toEqual({ message: expect.stringMatching(/too large/i) });
 	});

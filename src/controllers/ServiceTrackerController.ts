@@ -1,6 +1,6 @@
-import { Request, Response } from "express";
-import ServiceTrackerService from "../services/ServiceTrackerService";
+import type { Request, Response } from "express";
 import { Err, Succ } from "../services/globalService";
+import ServiceTrackerService from "../services/ServiceTrackerService";
 
 class ServiceTrackerController {
 	/**

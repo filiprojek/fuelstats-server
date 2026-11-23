@@ -1,8 +1,8 @@
-import request from "supertest";
 import jwt from "jsonwebtoken";
+import request from "supertest";
 import { app } from "../src/app";
-import ServiceTrackerService from "../src/services/ServiceTrackerService";
 import env from "../src/config/environment";
+import ServiceTrackerService from "../src/services/ServiceTrackerService";
 
 describe("ServiceTrackerController", () => {
 	const userId = "user123";
@@ -25,9 +25,7 @@ describe("ServiceTrackerController", () => {
 			const mockTasks = [{ id: "t1", name: "Oil Change" }];
 			const spy = jest.spyOn(ServiceTrackerService, "listServiceTasks").mockResolvedValue(mockTasks as any);
 
-			const res = await request(app)
-				.get("/api/v1/vehicles/service-tasks")
-				.set("Authorization", `Bearer ${token}`);
+			const res = await request(app).get("/api/v1/vehicles/service-tasks").set("Authorization", `Bearer ${token}`);
 
 			expect(res.status).toBe(200);
 			expect(spy).toHaveBeenCalled();
@@ -45,10 +43,7 @@ describe("ServiceTrackerController", () => {
 			const mockTask = { id: "custom_1", name: "Custom Service" };
 			const spy = jest.spyOn(ServiceTrackerService, "getOrCreateServiceTask").mockResolvedValue(mockTask as any);
 
-			const res = await request(app)
-				.post("/api/v1/vehicles/service-tasks")
-				.set("Authorization", `Bearer ${token}`)
-				.send({ name: "Custom Service" });
+			const res = await request(app).post("/api/v1/vehicles/service-tasks").set("Authorization", `Bearer ${token}`).send({ name: "Custom Service" });
 
 			expect(res.status).toBe(201);
 			expect(spy).toHaveBeenCalledWith("Custom Service");
@@ -66,9 +61,7 @@ describe("ServiceTrackerController", () => {
 			const mockIntervals = [{ serviceTaskId: "t1", intervalKm: 15000 }];
 			const spy = jest.spyOn(ServiceTrackerService, "getServiceIntervals").mockResolvedValue(mockIntervals as any);
 
-			const res = await request(app)
-				.get(`/api/v1/vehicles/${carId}/service-intervals`)
-				.set("Authorization", `Bearer ${token}`);
+			const res = await request(app).get(`/api/v1/vehicles/${carId}/service-intervals`).set("Authorization", `Bearer ${token}`);
 
 			expect(res.status).toBe(200);
 			expect(spy).toHaveBeenCalledWith(userId, carId);
@@ -86,10 +79,7 @@ describe("ServiceTrackerController", () => {
 			const intervals = [{ serviceTaskId: "t1", intervalKm: 15000 }];
 			const spy = jest.spyOn(ServiceTrackerService, "saveServiceIntervals").mockResolvedValue(intervals as any);
 
-			const res = await request(app)
-				.post(`/api/v1/vehicles/${carId}/service-intervals`)
-				.set("Authorization", `Bearer ${token}`)
-				.send({ intervals });
+			const res = await request(app).post(`/api/v1/vehicles/${carId}/service-intervals`).set("Authorization", `Bearer ${token}`).send({ intervals });
 
 			expect(res.status).toBe(200);
 			expect(spy).toHaveBeenCalledWith(userId, carId, intervals);
@@ -108,9 +98,7 @@ describe("ServiceTrackerController", () => {
 			const statusSpy = jest.spyOn(ServiceTrackerService, "getServiceStatus").mockResolvedValue(mockStatus as any);
 			const odoSpy = jest.spyOn(ServiceTrackerService, "getLatestOdometer").mockResolvedValue(50000);
 
-			const res = await request(app)
-				.get(`/api/v1/vehicles/${carId}/service-status`)
-				.set("Authorization", `Bearer ${token}`);
+			const res = await request(app).get(`/api/v1/vehicles/${carId}/service-status`).set("Authorization", `Bearer ${token}`);
 
 			expect(res.status).toBe(200);
 			expect(statusSpy).toHaveBeenCalledWith(userId, carId);
@@ -129,9 +117,7 @@ describe("ServiceTrackerController", () => {
 		it("returns 201 after seeding test data", async () => {
 			const spy = jest.spyOn(ServiceTrackerService, "seedTestData").mockResolvedValue(undefined);
 
-			const res = await request(app)
-				.post("/api/v1/vehicles/seed-test-data")
-				.set("Authorization", `Bearer ${token}`);
+			const res = await request(app).post("/api/v1/vehicles/seed-test-data").set("Authorization", `Bearer ${token}`);
 
 			expect(res.status).toBe(201);
 			expect(spy).toHaveBeenCalledWith(userId);

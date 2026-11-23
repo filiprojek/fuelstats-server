@@ -1,6 +1,6 @@
 import { Router } from "express";
-import VehicleController from "../controllers/VehicleController";
 import ServiceTrackerController from "../controllers/ServiceTrackerController";
+import VehicleController from "../controllers/VehicleController";
 import { requireAuth } from "../middlewares/AuthMiddleware";
 
 const router = Router();
@@ -40,4 +40,3 @@ router.put("/:id", requireAuth, VehicleController.update);
 router.delete("/:id", requireAuth, VehicleController.remove);
 
 export default router;
-
