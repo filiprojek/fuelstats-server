@@ -15,7 +15,7 @@ router.use(rootRoutes);
 router.get("/api/v1/version", (req: Request, res: Response) => {
 	res.json({
 		name: "fuelstats-server",
-		version: "1.1.1",
+		version: "1.2.0",
 		apiVersion: "v1",
 	});
 });

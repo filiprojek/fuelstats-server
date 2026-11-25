@@ -8,7 +8,7 @@ describe("GET /api/v1/version", () => {
 		expect(res.status).toBe(200);
 		expect(res.body).toEqual({
 			name: "fuelstats-server",
-			version: "1.1.1",
+			version: "1.2.0",
 			apiVersion: "v1",
 		});
 	});

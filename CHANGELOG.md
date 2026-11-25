@@ -2,6 +2,24 @@
 
 All notable changes to the `fuelstats-server` backend application will be documented in this file.
 
+## [1.2.0] - 2026-11-25
+
+### Features & Updates
+* **Single Sign-On (OpenID Connect)**: Sign in through Authelia or any OIDC provider (`OIDC_PROVIDERS`, `OIDC_<ID>_*`). PKCE code flow, auto-linking by verified email, optional auto-signup, and link/unlink endpoints. Users can set or change a password under sign-in methods.
+* **Remember Me Sessions**: Sliding session refresh with a configurable lifetime (`AUTH_REMEMBER_DAYS`, default 30 days).
+* **Odometer Start Record**: An odometer record can mark the start of a vehicle's history.
+* **CSV Import into a Vehicle**: Import into a chosen vehicle, skipping rows that are already present.
+* **Backup Scripts**: `scripts/backup/` adds restic backups, one-off snapshots and a pre-update snapshot in `update-fuelstats.sh`.
+* **Server Version Endpoint**: `GET /api/v1/version` now returns version `1.2.0`.
+
+### Fixes
+* **SPA Routing**: Client routes (refresh, deep links, the OIDC redirect back to `/login`) now serve `index.html` instead of `E404`.
+* Service photos larger than 100 kB are accepted (`BODY_LIMIT`, default `25mb`).
+* Ids that are not ObjectIds return 404.
+* Service task names are matched literally when finding or creating tasks.
+
+---
+
 ## [1.1.1] - 2026-07-20
 
 ### Features & Updates
